@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.github.camotoy.bedrockskinutility.client.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ClientPlayNetworkHandlerMixin",
+    "PlayerListEntryMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
