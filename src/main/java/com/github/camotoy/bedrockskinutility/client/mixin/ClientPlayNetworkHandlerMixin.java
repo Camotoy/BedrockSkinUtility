@@ -1,17 +1,14 @@
 package com.github.camotoy.bedrockskinutility.client.mixin;
 
 import com.github.camotoy.bedrockskinutility.client.BedrockPlayerListEntry;
+import com.github.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerInitListener;
 import com.github.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerListener;
-import com.mojang.authlib.GameProfile;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.util.Identifier;
@@ -28,14 +25,10 @@ import java.util.UUID;
 @Environment(EnvType.CLIENT)
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class ClientPlayNetworkHandlerMixin implements ClientPlayPacketListener {
-    private static final Identifier INIT = new Identifier("bedrockskinutility", "init");
-    private static final int VERSION = 1;
-
-    @Shadow @Final private ClientConnection connection;
-
-    @Shadow public abstract GameProfile getProfile();
 
     @Shadow @Final private Map<UUID, PlayerListEntry> playerListEntries;
+
+    @Shadow private MinecraftClient client;
 
     /**
      * @reason check and see if we already have this player's information
@@ -75,10 +68,9 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientPlayPacketL
      */
     @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClientGame;onStartGameSession()V"))
     public void bedrockskinutility$onGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
-        PacketByteBuf byteBuf = new PacketByteBuf(Unpooled.buffer());
-        byteBuf.writeInt(VERSION);
-        // Needed for BungeeCord
-        byteBuf.writeUuid(getProfile().getId());
-        this.connection.send(new CustomPayloadC2SPacket(INIT, byteBuf));
+        if (GeyserSkinManagerInitListener.SEND_INIT_PACKET) {
+            GeyserSkinManagerInitListener.SEND_INIT_PACKET = false;
+            GeyserSkinManagerInitListener.sendInitPacket(this.client);
+        }
     }
 }
