@@ -9,3 +9,5 @@ Setup:
 - Install this mod clientside
 - Install this plugin on your server: https://github.com/Camotoy/GeyserSkinManager
 - Done!
+
+Camotoy's Discord server: https://discord.gg/jNNC4CZtsN
