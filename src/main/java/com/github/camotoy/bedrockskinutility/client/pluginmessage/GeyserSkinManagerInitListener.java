@@ -11,9 +11,9 @@ import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Logger;
 
 public class GeyserSkinManagerInitListener implements ClientPlayNetworking.PlayChannelHandler {
-    private static final Identifier CHANNEL = new Identifier("geyserskinmanager", "init");
+    private static final Identifier CHANNEL = new Identifier("geyserskin", "init");
 
-    public static final Identifier INIT = new Identifier("bedrockskinutility", "init");
+    public static final Identifier INIT = new Identifier("bedrockskin", "init");
     public static final int VERSION = 1;
 
     private final Logger logger;

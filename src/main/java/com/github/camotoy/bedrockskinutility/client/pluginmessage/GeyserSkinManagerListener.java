@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class GeyserSkinManagerListener implements ClientPlayNetworking.PlayChannelHandler {
-    private static final Identifier CHANNEL = new Identifier("geyserskinmanager", "cape");
+    private static final Identifier CHANNEL = new Identifier("geyserskin", "cape");
     /**
      * If a player cannot be found, then stuff the UUID in here until they spawn.
      */
