@@ -10,4 +10,6 @@ Setup:
 - Install this plugin on your server: https://github.com/Camotoy/GeyserSkinManager
 - Done!
 
+Logo courtesy of NotNotNotSwipez (Discord: notnotnotswipez#9106).
+
 Camotoy's Discord server: https://discord.gg/jNNC4CZtsN
