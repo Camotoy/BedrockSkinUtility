@@ -72,10 +72,6 @@ public class GeyserSkinManagerListener implements ClientPlayNetworking.PlayChann
         }
 
         client.submit(() -> {
-            if (client.world == null) {
-                this.logger.info("Client world was null; not applying texture for " + playerUuid);
-                return;
-            }
             if (client.getNetworkHandler() == null) {
                 // ???
                 this.logger.info("Network handler was null; not applying texture for " + playerUuid);
