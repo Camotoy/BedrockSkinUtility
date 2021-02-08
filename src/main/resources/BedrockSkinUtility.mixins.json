@@ -4,10 +4,11 @@
   "package": "com.github.camotoy.bedrockskinutility.client.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "ClientPlayNetworkHandlerMixin",
-    "PlayerListEntryMixin"
   ],
   "client": [
+    "CapeFeatureRendererMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "PlayerListEntryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

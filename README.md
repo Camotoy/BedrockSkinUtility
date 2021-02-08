@@ -12,4 +12,6 @@ Setup:
 
 Logo courtesy of NotNotNotSwipez (Discord: notnotnotswipez#9106).
 
+Thanks to https://github.com/VelvetMC/SimpleCapes for helping me figure out how capes work in Fabric, and for the base of translucent capes.
+
 Camotoy's Discord server: https://discord.gg/jNNC4CZtsN
