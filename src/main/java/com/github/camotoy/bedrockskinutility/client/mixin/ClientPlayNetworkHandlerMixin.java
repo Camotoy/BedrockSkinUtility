@@ -1,15 +1,12 @@
 package com.github.camotoy.bedrockskinutility.client.mixin;
 
 import com.github.camotoy.bedrockskinutility.client.BedrockPlayerListEntry;
-import com.github.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerInitListener;
 import com.github.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerListener;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
@@ -27,8 +24,6 @@ import java.util.UUID;
 public abstract class ClientPlayNetworkHandlerMixin implements ClientPlayPacketListener {
 
     @Shadow @Final private Map<UUID, PlayerListEntry> playerListEntries;
-
-    @Shadow private MinecraftClient client;
 
     /**
      * @reason check and see if we already have this player's information
@@ -60,17 +55,6 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientPlayPacketL
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * @reason tells the server that we have the mod installed
-     */
-    @Inject(method = "onGameJoin", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClientGame;onStartGameSession()V"))
-    public void bedrockskinutility$onGameJoin(GameJoinS2CPacket packet, CallbackInfo ci) {
-        if (GeyserSkinManagerInitListener.SEND_INIT_PACKET) {
-            GeyserSkinManagerInitListener.SEND_INIT_PACKET = false;
-            GeyserSkinManagerInitListener.sendInitPacket(this.client);
         }
     }
 }
