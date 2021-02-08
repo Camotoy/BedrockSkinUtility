@@ -3,7 +3,7 @@
   "id": "bedrockskinutility",
   "version": "${version}",
   "name": "BedrockSkinUtility",
-  "description": "",
+  "description": "BedrockSkinUtility is a client-only mod that allows Bedrock Edition skin and cape properties to appear rendered. At this time, only capes are shown if the server has GeyserSkinManager installed.",
   "authors": [
     "Camotoy"
   ],
