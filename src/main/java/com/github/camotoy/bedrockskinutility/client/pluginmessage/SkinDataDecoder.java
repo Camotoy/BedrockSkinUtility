@@ -70,7 +70,7 @@ public class SkinDataDecoder extends Decoder {
         Identifier identifier = new Identifier("geyserskinmanager", playerUuid.toString());
         client.submit(() -> {
             client.getTextureManager().registerTexture(identifier, new NativeImageBackedTexture(skinImage));
-            if (setModel) { // If IntelliJ yells at you here, it's because it sees the "CastCastExceptions" above and yells at you.
+            if (setModel) {
                 ((EntityRendererDispatcherModelModify) client.getEntityRenderDispatcher()).addPlayerModel(playerUuid.toString(), renderer);
             }
             applySkinTexture(handler, playerUuid, identifier, setModel);
