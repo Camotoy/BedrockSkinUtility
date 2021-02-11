@@ -1,7 +1,8 @@
 package com.github.camotoy.bedrockskinutility.client.mixin;
 
-import com.github.camotoy.bedrockskinutility.client.BedrockPlayerListEntry;
-import com.github.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerListener;
+import com.github.camotoy.bedrockskinutility.client.BedrockCachedProperties;
+import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import com.github.camotoy.bedrockskinutility.client.SkinManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -32,9 +33,15 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientPlayPacketL
     public void bedrockskinutility$onPlayerAdd(PlayerListS2CPacket packet, CallbackInfo ci) {
         if (packet.getAction() == PlayerListS2CPacket.Action.ADD_PLAYER) {
             for (PlayerListS2CPacket.Entry entry : packet.getEntries()) {
-                Identifier capeIdentifier = GeyserSkinManagerListener.CACHED_PLAYERS.getIfPresent(entry.getProfile().getId());
-                if (capeIdentifier != null) {
-                    ((BedrockPlayerListEntry) this.playerListEntries.get(entry.getProfile().getId())).bedrockskinutility$setCape(capeIdentifier);
+                BedrockCachedProperties properties = SkinManager.getInstance().getCachedPlayers().getIfPresent(entry.getProfile().getId());
+                if (properties != null) {
+                    BedrockPlayerListEntry bedrockEntry = ((BedrockPlayerListEntry) this.playerListEntries.get(entry.getProfile().getId()));
+                    if (properties.skin != null) {
+                        bedrockEntry.bedrockskinutility$setSkinProperties(properties.skin, properties.model);
+                    }
+                    if (properties.cape != null) {
+                        bedrockEntry.bedrockskinutility$setCape(properties.cape);
+                    }
                 }
             }
         }
@@ -49,9 +56,14 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientPlayPacketL
             for (PlayerListS2CPacket.Entry entry : packet.getEntries()) {
                 PlayerListEntry playerListEntry = this.playerListEntries.get(entry.getProfile().getId());
                 if (playerListEntry != null) {
+                    Identifier skinIdentifier = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getSkin();
                     Identifier capeIdentifier = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getCape();
-                    if (capeIdentifier != null) {
-                        GeyserSkinManagerListener.CACHED_PLAYERS.put(entry.getProfile().getId(), capeIdentifier);
+                    if (skinIdentifier != null || capeIdentifier != null) {
+                        BedrockCachedProperties properties = new BedrockCachedProperties();
+                        properties.skin = skinIdentifier;
+                        properties.model = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getModel();
+                        properties.cape = capeIdentifier;
+                        SkinManager.getInstance().getCachedPlayers().put(entry.getProfile().getId(), properties);
                     }
                 }
             }

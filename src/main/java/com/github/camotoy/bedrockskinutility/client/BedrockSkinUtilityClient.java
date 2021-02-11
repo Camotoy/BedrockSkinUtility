@@ -19,11 +19,9 @@ public class BedrockSkinUtilityClient implements ClientModInitializer {
     public void onInitializeClient() {
         logger.info("Hello from BedrockClientSkinUtility!");
 
-        this.pluginMessageListener = new GeyserSkinManagerListener(this.logger);
+        this.pluginMessageListener = new GeyserSkinManagerListener(this.logger, new SkinManager(this.logger));
         this.pluginMessageListener.register();
 
-        ClientLifecycleEvents.CLIENT_STOPPING.register((client -> {
-            this.pluginMessageListener.unregister();
-        }));
+        ClientLifecycleEvents.CLIENT_STOPPING.register((client -> this.pluginMessageListener.unregister()));
     }
 }

@@ -1,6 +1,6 @@
 package com.github.camotoy.bedrockskinutility.client.mixin;
 
-import com.github.camotoy.bedrockskinutility.client.BedrockPlayerListEntry;
+import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.util.Identifier;
@@ -19,14 +19,32 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
 
     @Shadow @Final private Map<MinecraftProfileTexture.Type, Identifier> textures;
 
+    @Shadow private @Nullable String model;
     /**
      * The identifier pointing to the Bedrock cape sent from the server.
      */
     private Identifier bedrockCape;
 
+    private Identifier bedrockSkin;
+
+    /**
+     * The string pointing to the Bedrock model
+     */
+    private String bedrockModel;
+
     @Override
     public Identifier bedrockskinutility$getCape() {
         return bedrockCape;
+    }
+
+    @Override
+    public String bedrockskinutility$getModel() {
+        return bedrockModel;
+    }
+
+    @Override
+    public Identifier bedrockskinutility$getSkin() {
+        return bedrockSkin;
     }
 
     @Override
@@ -42,5 +60,29 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
         if (this.bedrockCape != null && this.textures.get(MinecraftProfileTexture.Type.CAPE) == null) {
             this.textures.put(MinecraftProfileTexture.Type.CAPE, this.bedrockCape);
         }
+    }
+
+    @Inject(method = "getModel", at = @At("HEAD"), cancellable = true)
+    public void bedrockskinutility$getSkinModel(CallbackInfoReturnable<String> cir) {
+        if (this.bedrockModel != null) {
+            cir.setReturnValue(bedrockModel);
+        }
+    }
+
+    @Inject(method = "getSkinTexture", at = @At(value = "INVOKE", target = "Lcom/google/common/base/MoreObjects;firstNonNull(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), cancellable = true)
+    public void bedrockskinutility$getSkinTexture(CallbackInfoReturnable<Identifier> cir) {
+        if (bedrockSkin != null) {
+            cir.setReturnValue(bedrockSkin);
+        }
+    }
+
+    @Override
+    public void bedrockskinutility$setSkinProperties(Identifier identifier, String model) {
+        if (model != null) {
+            this.model = model;
+        }
+        this.textures.put(MinecraftProfileTexture.Type.SKIN, identifier);
+        this.bedrockModel = model;
+        this.bedrockSkin = identifier;
     }
 }

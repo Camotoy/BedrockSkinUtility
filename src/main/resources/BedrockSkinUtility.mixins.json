@@ -8,6 +8,8 @@
   "client": [
     "CapeFeatureRendererMixin",
     "ClientPlayNetworkHandlerMixin",
+    "EntityRendererDispatcherMixin",
+    "PlayerEntityRendererMixin",
     "PlayerListEntryMixin"
   ],
   "injectors": {
