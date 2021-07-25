@@ -3,11 +3,12 @@ package com.github.camotoy.bedrockskinutility.client.pluginmessage;
 import com.github.camotoy.bedrockskinutility.client.*;
 import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.github.camotoy.bedrockskinutility.client.interfaces.EntityRendererDispatcherModelModify;
-import com.github.camotoy.bedrockskinutility.client.interfaces.PlayerEntityRendererChangeModel;
+import com.github.camotoy.bedrockskinutility.client.mixin.PlayerEntityRendererChangeModel;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -58,7 +59,9 @@ public class SkinDataDecoder extends Decoder {
             // Convert Bedrock JSON geometry into a class format that Java understands
             BedrockPlayerEntityModel<AbstractClientPlayerEntity> model = geometryUtil.bedrockGeoToJava(info);
             if (model != null) {
-                renderer = new PlayerEntityRenderer(client.getEntityRenderDispatcher());
+                EntityRendererFactory.Context context = new EntityRendererFactory.Context(client.getEntityRenderDispatcher(),
+                        client.getItemRenderer(), client.getResourceManager(), client.getEntityModelLoader(), client.textRenderer);
+                renderer = new PlayerEntityRenderer(context, false);
                 ((PlayerEntityRendererChangeModel) renderer).bedrockskinutility$setModel(model);
             } else {
                 renderer = null;

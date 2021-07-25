@@ -1,16 +1,18 @@
 package com.github.camotoy.bedrockskinutility.client;
 
+import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.client.model.Dilation;
 import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.model.ModelPartBuilder;
+import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GeometryUtil {
     private final Logger logger;
@@ -45,10 +47,6 @@ public class GeometryUtil {
 
         Map<String, PartInfo> stringToPart = new HashMap<>();
         try {
-            // Create base model
-            BedrockPlayerEntityModel<AbstractClientPlayerEntity> model = new BedrockPlayerEntityModel<>();
-            model.textureHeight = info.getHeight();
-            model.textureWidth = info.getWidth();
             for (JsonObject bone : bones) {
                 // Iterate through all bones
                 String name = bone.get("name").getAsString();
@@ -67,20 +65,11 @@ public class GeometryUtil {
                     }
                 }
 
-                ModelPart part = new ModelPart(model);
+                List<ModelPart.Cuboid> cuboids = new ArrayList<>();
                 JsonArray pivot = bone.getAsJsonArray("pivot");
                 float pivotX = pivot.get(0).getAsFloat();
                 float pivotY = pivot.get(1).getAsFloat();
                 float pivotZ = pivot.get(2).getAsFloat();
-                if (parentPart != null) {
-                    // This appears to be a difference between Bedrock and Java - pivots are carried over for us
-                    JsonArray parentPivot = parentPart.getAsJsonArray("pivot");
-                    part.setPivot(pivotX - parentPivot.get(0).getAsFloat(),
-                            pivotY - parentPivot.get(1).getAsFloat(),
-                            pivotZ - parentPivot.get(2).getAsFloat());
-                } else {
-                    part.setPivot(pivotX, pivotY, pivotZ);
-                }
 
                 JsonArray cubes = bone.getAsJsonArray("cubes");
                 if (cubes != null) {
@@ -99,57 +88,60 @@ public class GeometryUtil {
                         float inflate = cube.get("inflate").getAsFloat();
                         // I didn't use the below, but it may be a helpful reference in the future
                         // The Y needs to be inverted, for whatever reason
-                        // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
-                        part.setTextureOffset((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat())
-                                .addCuboid((originX - pivotX), (((originY + sizeY) * -1) + pivotY), (originZ - pivotZ), // probably Z too
-                                        sizeX, sizeY, sizeZ, inflate, mirrored);
+                        // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
+                        cuboids.add(new ModelPart.Cuboid((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat(),
+                                (originX - pivotX), (((originY + sizeY) * -1) + pivotY), (originZ - pivotZ),
+                                sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, info.getHeight(), info.getWidth()));
                     }
                 }
 
-                boolean needsParent = false;
-
-                switch (name) { // Also do this with the overlays? Those are final, though.
-                    case "head":
-                        model.head = part;
-                        break;
-                    case "hat":
-                        model.helmet = part;
-                        break;
-                    case "body":
-                        model.torso = part;
-                        break;
-                    case "leftArm":
-                        model.leftArm = part;
-                        break;
-                    case "rightArm":
-                        model.rightArm = part;
-                        break;
-                    case "leftLeg":
-                        model.leftLeg = part;
-                        break;
-                    case "rightLeg":
-                        model.rightLeg = part;
-                        break;
-                    default:
-                        needsParent = true;
-                        break;
+                Map<String, ModelPart> children = new HashMap<>();
+                ModelPart part = new ModelPart(cuboids, children);
+                if (parentPart != null) {
+                    // This appears to be a difference between Bedrock and Java - pivots are carried over for us
+                    JsonArray parentPivot = parentPart.getAsJsonArray("pivot");
+                    part.setPivot(pivotX - parentPivot.get(0).getAsFloat(),
+                            pivotY - parentPivot.get(1).getAsFloat(),
+                            pivotZ - parentPivot.get(2).getAsFloat());
+                } else {
+                    part.setPivot(pivotX, pivotY, pivotZ);
                 }
 
-                stringToPart.put(name, new PartInfo(needsParent, parent, part));
+                switch (name) { // Also do this with the overlays? Those are final, though.
+                    case "head", "hat", "rightArm", "body", "leftArm", "leftLeg", "rightLeg" -> parent = "root";
+                }
+
+                name = adjustFormatting(name);
+
+                stringToPart.put(name, new PartInfo(adjustFormatting(parent), part, children));
             }
 
             for (Map.Entry<String, PartInfo> entry : stringToPart.entrySet()) {
-                if (entry.getValue().needsParent) {
-                    if (entry.getValue().parent != null) {
-                        PartInfo parentPart = stringToPart.get(entry.getValue().parent);
-                        if (parentPart != null) {
-                            parentPart.part.addChild(entry.getValue().part);
-                        }
+                if (entry.getValue().parent != null) {
+                    PartInfo parentPart = stringToPart.get(entry.getValue().parent);
+                    if (parentPart != null) {
+                        parentPart.children.put(entry.getKey(), entry.getValue().part);
                     }
                 }
             }
 
-            return model;
+            PartInfo root = stringToPart.get("root");
+
+            ensureAvailable(root.children, "ear");
+            root.children.computeIfAbsent("cloak", (string) ->
+                            BipedEntityModel.getModelData(Dilation.NONE, 0.0F).getRoot().addChild(string,
+                                    ModelPartBuilder.create()
+                                            .uv(0, 0)
+                                            .cuboid(-5.0F, 0.0F, -1.0F, 10.0F, 16.0F, 1.0F, Dilation.NONE, 1.0F, 0.5F),
+                                    ModelTransform.pivot(0.0F, 0.0F, 0.0F)).createPart(64, 64));
+            ensureAvailable(root.children, "left_sleeve");
+            ensureAvailable(root.children, "right_sleeve");
+            ensureAvailable(root.children, "left_pants");
+            ensureAvailable(root.children, "right_pants");
+            ensureAvailable(root.children, "jacket");
+
+            // Create base model
+            return new BedrockPlayerEntityModel<>(root.part);
         } catch (Exception e) {
             this.logger.error("Error while parsing geometry into model!");
             e.printStackTrace();
@@ -157,23 +149,27 @@ public class GeometryUtil {
         }
     }
 
-    private static class PartInfo {
-        public final boolean needsParent;
-        public final String parent;
-        public final ModelPart part;
-
-        public PartInfo(boolean needsParent, String parent, ModelPart part) {
-            this.needsParent = needsParent;
-            this.parent = parent;
-            this.part = part;
+    private String adjustFormatting(String name) {
+        if (name == null) {
+            return null;
         }
 
-        @Override
-        public String toString() {
-            return "PartInfo{" +
-                    "parent='" + parent + '\'' +
-                    ", part=" + part +
-                    '}';
-        }
+        return switch (name) {
+            case "leftArm" -> "left_arm";
+            case "rightArm" -> "right_arm";
+            case "leftLeg" -> "left_leg";
+            case "rightLeg" -> "right_leg";
+            default -> name;
+        };
+    }
+
+    /**
+     * Ensure a part is created, or else the geometry will not load in 1.17.
+     */
+    private void ensureAvailable(Map<String, ModelPart> children, String name) {
+        children.computeIfAbsent(name, (string) -> new ModelPart(Collections.emptyList(), Maps.newHashMap()));
+    }
+
+    private record PartInfo(String parent, ModelPart part, Map<String, ModelPart> children) {
     }
 }

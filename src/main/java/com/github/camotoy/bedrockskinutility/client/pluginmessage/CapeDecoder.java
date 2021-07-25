@@ -34,11 +34,11 @@ public class CapeDecoder extends Decoder {
 
         String capeId = readString(buf);
         Identifier identifier = new Identifier("geyserskinmanager", capeId);
-        if (client.getTextureManager().getTexture(identifier) != null) {
-            // Texture is already registered, so we don't need to apply it again
-            client.submit(() -> applyCapeTexture(handler, playerUuid, identifier));
-            return;
-        }
+//        if (client.getTextureManager().getTexture(identifier) != null) {
+//            // Texture is already registered, so we don't need to apply it again
+//            client.submit(() -> applyCapeTexture(handler, playerUuid, identifier));
+//            return;
+//        }
 
         byte[] capeData = new byte[buf.readInt()];
         for (int i = 0; i < capeData.length; i++) {

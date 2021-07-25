@@ -69,7 +69,7 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
         }
     }
 
-    @Inject(method = "getSkinTexture", at = @At(value = "INVOKE", target = "Lcom/google/common/base/MoreObjects;firstNonNull(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), cancellable = true)
+    @Inject(method = "getSkinTexture", at = @At("RETURN"), cancellable = true)
     public void bedrockskinutility$getSkinTexture(CallbackInfoReturnable<Identifier> cir) {
         if (bedrockSkin != null) {
             cir.setReturnValue(bedrockSkin);
