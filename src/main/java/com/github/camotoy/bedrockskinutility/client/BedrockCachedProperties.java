@@ -1,5 +1,6 @@
 package com.github.camotoy.bedrockskinutility.client;
 
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.util.Identifier;
 
 /**
@@ -7,6 +8,6 @@ import net.minecraft.util.Identifier;
  */
 public class BedrockCachedProperties {
     public Identifier cape;
-    public String model;
+    public PlayerEntityRenderer model;
     public Identifier skin;
 }

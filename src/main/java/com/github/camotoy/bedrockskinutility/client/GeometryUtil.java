@@ -128,7 +128,7 @@ public class GeometryUtil {
             PartInfo root = stringToPart.get("root");
 
             ensureAvailable(root.children, "ear");
-            root.children.computeIfAbsent("cloak", (string) ->
+            root.children.computeIfAbsent("cloak", (string) -> // Required to allow a cape to render
                             BipedEntityModel.getModelData(Dilation.NONE, 0.0F).getRoot().addChild(string,
                                     ModelPartBuilder.create()
                                             .uv(0, 0)

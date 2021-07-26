@@ -3,6 +3,7 @@ package com.github.camotoy.bedrockskinutility.client.mixin;
 import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -19,7 +20,6 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
 
     @Shadow @Final private Map<MinecraftProfileTexture.Type, Identifier> textures;
 
-    @Shadow private @Nullable String model;
     /**
      * The identifier pointing to the Bedrock cape sent from the server.
      */
@@ -27,10 +27,7 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
 
     private Identifier bedrockSkin;
 
-    /**
-     * The string pointing to the Bedrock model
-     */
-    private String bedrockModel;
+    private PlayerEntityRenderer bedrockModel;
 
     @Override
     public Identifier bedrockskinutility$getCape() {
@@ -38,7 +35,7 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
     }
 
     @Override
-    public String bedrockskinutility$getModel() {
+    public PlayerEntityRenderer bedrockskinutility$getModel() {
         return bedrockModel;
     }
 
@@ -62,13 +59,6 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
         }
     }
 
-    @Inject(method = "getModel", at = @At("HEAD"), cancellable = true)
-    public void bedrockskinutility$getSkinModel(CallbackInfoReturnable<String> cir) {
-        if (this.bedrockModel != null) {
-            cir.setReturnValue(bedrockModel);
-        }
-    }
-
     @Inject(method = "getSkinTexture", at = @At("RETURN"), cancellable = true)
     public void bedrockskinutility$getSkinTexture(CallbackInfoReturnable<Identifier> cir) {
         if (bedrockSkin != null) {
@@ -77,10 +67,7 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
     }
 
     @Override
-    public void bedrockskinutility$setSkinProperties(Identifier identifier, String model) {
-        if (model != null) {
-            this.model = model;
-        }
+    public void bedrockskinutility$setSkinProperties(Identifier identifier, PlayerEntityRenderer model) {
         this.textures.put(MinecraftProfileTexture.Type.SKIN, identifier);
         this.bedrockModel = model;
         this.bedrockSkin = identifier;

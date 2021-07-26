@@ -2,7 +2,6 @@ package com.github.camotoy.bedrockskinutility.client.pluginmessage;
 
 import com.github.camotoy.bedrockskinutility.client.*;
 import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
-import com.github.camotoy.bedrockskinutility.client.interfaces.EntityRendererDispatcherModelModify;
 import com.github.camotoy.bedrockskinutility.client.mixin.PlayerEntityRendererChangeModel;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -73,17 +72,14 @@ public class SkinDataDecoder extends Decoder {
         Identifier identifier = new Identifier("geyserskinmanager", playerUuid.toString());
         client.submit(() -> {
             client.getTextureManager().registerTexture(identifier, new NativeImageBackedTexture(skinImage));
-            if (setModel) {
-                ((EntityRendererDispatcherModelModify) client.getEntityRenderDispatcher()).addPlayerModel(playerUuid.toString(), renderer);
-            }
-            applySkinTexture(handler, playerUuid, identifier, setModel);
+            applySkinTexture(handler, playerUuid, identifier, renderer);
         });
     }
 
     /**
      * Should be run from the main thread
      */
-    private void applySkinTexture(ClientPlayNetworkHandler handler, UUID playerUuid, Identifier identifier, boolean setModel) {
+    private void applySkinTexture(ClientPlayNetworkHandler handler, UUID playerUuid, Identifier identifier, PlayerEntityRenderer renderer) {
         PlayerListEntry entry = handler.getPlayerListEntry(playerUuid);
         if (entry == null) {
             // Save in the cache for later
@@ -92,12 +88,10 @@ public class SkinDataDecoder extends Decoder {
                 properties = new BedrockCachedProperties();
                 skinManager.getCachedPlayers().put(playerUuid, properties);
             }
-            if (setModel) {
-                properties.model = playerUuid.toString();
-            }
+            properties.model = renderer;
             properties.skin = identifier;
         } else {
-            ((BedrockPlayerListEntry) entry).bedrockskinutility$setSkinProperties(identifier, setModel ? playerUuid.toString() : null);
+            ((BedrockPlayerListEntry) entry).bedrockskinutility$setSkinProperties(identifier, renderer);
         }
     }
 }
