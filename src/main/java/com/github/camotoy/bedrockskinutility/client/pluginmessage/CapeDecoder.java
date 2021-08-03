@@ -34,11 +34,6 @@ public class CapeDecoder extends Decoder {
 
         String capeId = readString(buf);
         Identifier identifier = new Identifier("geyserskinmanager", capeId);
-//        if (client.getTextureManager().getTexture(identifier) != null) {
-//            // Texture is already registered, so we don't need to apply it again
-//            client.submit(() -> applyCapeTexture(handler, playerUuid, identifier));
-//            return;
-//        }
 
         byte[] capeData = new byte[buf.readInt()];
         for (int i = 0; i < capeData.length; i++) {
@@ -49,6 +44,7 @@ public class CapeDecoder extends Decoder {
         NativeImage capeImage = toNativeImage(capeData, width, height);
 
         client.submit(() -> {
+            // As of 1.17.1, identical identifiers do not result in multiple objects of the same type being registered
             client.getTextureManager().registerTexture(identifier, new NativeImageBackedTexture(capeImage));
             applyCapeTexture(handler, playerUuid, identifier);
         });
