@@ -1,8 +1,8 @@
 # BedrockSkinUtility
 
-Fabric mod that allows you to view Bedrock skins and capes. Tested on 1.16.4 and 1.16.5. 
+Fabric mod that allows you to view Bedrock skins and capes.
 
-Persona/character creator skins are not supported at this time, though there is interest to support this. If you know how the system works, feel free to reach out to me!
+Persona/character creator skins are not supported at this time, though this will be supported in the future.
 
 Setup:
 
