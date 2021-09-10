@@ -75,7 +75,8 @@ public class GeometryUtil {
                 if (cubes != null) {
                     for (JsonElement node : cubes) {
                         JsonObject cube = node.getAsJsonObject();
-                        boolean mirrored = cube.get("mirror").getAsBoolean();
+                        JsonElement mirrorNode = cube.get("mirror"); // Can be null on the llama skins in the Wandering Trader pack
+                        boolean mirrored = mirrorNode != null && mirrorNode.getAsBoolean();
                         JsonArray origin = cube.getAsJsonArray("origin");
                         float originX = origin.get(0).getAsFloat();
                         float originY = origin.get(1).getAsFloat();
@@ -85,7 +86,8 @@ public class GeometryUtil {
                         float sizeY = size.get(1).getAsFloat();
                         float sizeZ = size.get(2).getAsFloat();
                         JsonArray uv = cube.getAsJsonArray("uv");
-                        float inflate = cube.get("inflate").getAsFloat();
+                        JsonElement inflateNode = cube.get("inflate"); // Again, the llama skin
+                        float inflate = inflateNode != null ? inflateNode.getAsFloat() : 0f;
                         // I didn't use the below, but it may be a helpful reference in the future
                         // The Y needs to be inverted, for whatever reason
                         // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
@@ -143,8 +145,7 @@ public class GeometryUtil {
             // Create base model
             return new BedrockPlayerEntityModel<>(root.part);
         } catch (Exception e) {
-            this.logger.error("Error while parsing geometry into model!");
-            e.printStackTrace();
+            this.logger.error("Error while parsing geometry into model!", e);
             return null;
         }
     }

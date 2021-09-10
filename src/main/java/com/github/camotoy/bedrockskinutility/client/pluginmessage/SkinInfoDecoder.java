@@ -43,13 +43,12 @@ public class SkinInfoDecoder extends Decoder {
                     jsonGeometry = parser.parse(geometry).getAsJsonObject();
                     jsonGeometryName = parser.parse(readString(buf)).getAsJsonObject();
                 } catch (Exception e) {
-                    this.logger.error("Error while trying to decode geometry!");
-                    e.printStackTrace();
+                    this.logger.error("Error while trying to decode geometry!", e);
                     return;
                 }
             }
 
-            System.out.println(geometry);
+            this.logger.debug(geometry);
 
             int chunkCount = buf.readInt();
 

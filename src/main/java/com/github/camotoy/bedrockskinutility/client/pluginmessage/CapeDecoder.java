@@ -36,9 +36,7 @@ public class CapeDecoder extends Decoder {
         Identifier identifier = new Identifier("geyserskinmanager", capeId);
 
         byte[] capeData = new byte[buf.readInt()];
-        for (int i = 0; i < capeData.length; i++) {
-            capeData[i] = buf.readByte();
-        }
+        buf.readBytes(capeData);
         /* Read plugin message end */
 
         NativeImage capeImage = toNativeImage(capeData, width, height);

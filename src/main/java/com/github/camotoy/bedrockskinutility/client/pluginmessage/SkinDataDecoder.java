@@ -31,9 +31,7 @@ public class SkinDataDecoder extends Decoder {
         int chunkPosition = buf.readInt();
         int available = buf.readableBytes();
         byte[] skinData = new byte[available];
-        for (int i = 0; i < skinData.length; i++) {
-            skinData[i] = buf.readByte();
-        }
+        buf.readBytes(skinData);
 
         SkinInfo info = skinManager.getSkinInfo().get(playerUuid);
         if (info == null) {
