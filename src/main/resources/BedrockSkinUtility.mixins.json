@@ -11,6 +11,7 @@
     "PlayerEntityRendererChangeModel",
     "PlayerListEntryMixin"
   ],
+  "plugin": "com.github.camotoy.bedrockskinutility.client.MixinConfigPlugin",
   "injectors": {
     "defaultRequire": 1
   }
