@@ -3,16 +3,16 @@ package com.github.camotoy.bedrockskinutility.client.pluginmessage;
 import com.github.camotoy.bedrockskinutility.client.*;
 import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.github.camotoy.bedrockskinutility.client.mixin.PlayerEntityRendererChangeModel;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
 
 import java.util.UUID;
@@ -26,8 +26,8 @@ public class SkinDataDecoder extends Decoder {
     }
 
     @Override
-    public void decode(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf) {
-        UUID playerUuid = buf.readUuid();
+    public void decode(Minecraft client, ClientPacketListener handler, FriendlyByteBuf buf) {
+        UUID playerUuid = buf.readUUID();
         int chunkPosition = buf.readInt();
         int available = buf.readableBytes();
         byte[] skinData = new byte[available];
@@ -49,16 +49,16 @@ public class SkinDataDecoder extends Decoder {
         }
 
         NativeImage skinImage = toNativeImage(info.getData(), info.getWidth(), info.getHeight());
-        PlayerEntityRenderer renderer;
+        PlayerRenderer renderer;
         boolean setModel = info.getGeometry() != null;
 
         if (setModel) {
             // Convert Bedrock JSON geometry into a class format that Java understands
-            BedrockPlayerEntityModel<AbstractClientPlayerEntity> model = geometryUtil.bedrockGeoToJava(info);
+            BedrockPlayerEntityModel<AbstractClientPlayer> model = geometryUtil.bedrockGeoToJava(info);
             if (model != null) {
-                EntityRendererFactory.Context context = new EntityRendererFactory.Context(client.getEntityRenderDispatcher(),
-                        client.getItemRenderer(), client.getResourceManager(), client.getEntityModelLoader(), client.textRenderer);
-                renderer = new PlayerEntityRenderer(context, false);
+                EntityRendererProvider.Context context = new EntityRendererProvider.Context(client.getEntityRenderDispatcher(),
+                        client.getItemRenderer(), client.getResourceManager(), client.getEntityModels(), client.font);
+                renderer = new PlayerRenderer(context, false);
                 ((PlayerEntityRendererChangeModel) renderer).bedrockskinutility$setModel(model);
             } else {
                 renderer = null;
@@ -67,9 +67,9 @@ public class SkinDataDecoder extends Decoder {
             renderer = null;
         }
 
-        Identifier identifier = new Identifier("geyserskinmanager", playerUuid.toString());
+        ResourceLocation identifier = new ResourceLocation("geyserskinmanager", playerUuid.toString());
         client.submit(() -> {
-            client.getTextureManager().registerTexture(identifier, new NativeImageBackedTexture(skinImage));
+            client.getTextureManager().register(identifier, new DynamicTexture(skinImage));
             applySkinTexture(handler, playerUuid, identifier, renderer);
         });
     }
@@ -77,8 +77,8 @@ public class SkinDataDecoder extends Decoder {
     /**
      * Should be run from the main thread
      */
-    private void applySkinTexture(ClientPlayNetworkHandler handler, UUID playerUuid, Identifier identifier, PlayerEntityRenderer renderer) {
-        PlayerListEntry entry = handler.getPlayerListEntry(playerUuid);
+    private void applySkinTexture(ClientPacketListener handler, UUID playerUuid, ResourceLocation identifier, PlayerRenderer renderer) {
+        PlayerInfo entry = handler.getPlayerInfo(playerUuid);
         if (entry == null) {
             // Save in the cache for later
             BedrockCachedProperties properties = skinManager.getCachedPlayers().getIfPresent(playerUuid);

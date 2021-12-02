@@ -1,13 +1,13 @@
 package com.github.camotoy.bedrockskinutility.client;
 
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * All cached properties of a player, if their PlayerListPacket has not sent or is being reloaded
  */
 public class BedrockCachedProperties {
-    public Identifier cape;
-    public PlayerEntityRenderer model;
-    public Identifier skin;
+    public ResourceLocation cape;
+    public PlayerRenderer model;
+    public ResourceLocation skin;
 }

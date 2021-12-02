@@ -1,20 +1,20 @@
 package com.github.camotoy.bedrockskinutility.client.mixin;
 
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.entity.feature.CapeFeatureRenderer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.layers.CapeLayer;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(CapeFeatureRenderer.class)
+@Mixin(CapeLayer.class)
 public class CapeFeatureRendererMixin {
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer;getEntitySolid(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"))
-    public RenderLayer solidToTranslucent(Identifier texture) {
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;entitySolid(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;"))
+    public RenderType solidToTranslucent(ResourceLocation texture) {
         if (texture.getNamespace().equals("geyserskinmanager")) {
             // Capes can be translucent in Bedrock
-            return RenderLayer.getEntityTranslucent(texture, true);
+            return RenderType.entityTranslucent(texture, true);
         }
-        return RenderLayer.getEntitySolid(texture);
+        return RenderType.entitySolid(texture);
     }
 }

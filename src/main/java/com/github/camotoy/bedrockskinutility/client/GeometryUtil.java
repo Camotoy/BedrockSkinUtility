@@ -4,12 +4,12 @@ import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.client.model.Dilation;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.player.AbstractClientPlayer;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
@@ -21,7 +21,7 @@ public class GeometryUtil {
         this.logger = logger;
     }
 
-    public BedrockPlayerEntityModel<AbstractClientPlayerEntity> bedrockGeoToJava(SkinInfo info) {
+    public BedrockPlayerEntityModel<AbstractClientPlayer> bedrockGeoToJava(SkinInfo info) {
         // Construct a list of all bones we need to translate
         List<JsonObject> bones = new ArrayList<>();
         try {
@@ -65,7 +65,7 @@ public class GeometryUtil {
                     }
                 }
 
-                List<ModelPart.Cuboid> cuboids = new ArrayList<>();
+                List<ModelPart.Cube> cuboids = new ArrayList<>();
                 JsonArray pivot = bone.getAsJsonArray("pivot");
                 float pivotX = pivot.get(0).getAsFloat();
                 float pivotY = pivot.get(1).getAsFloat();
@@ -91,7 +91,7 @@ public class GeometryUtil {
                         // I didn't use the below, but it may be a helpful reference in the future
                         // The Y needs to be inverted, for whatever reason
                         // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
-                        cuboids.add(new ModelPart.Cuboid((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat(),
+                        cuboids.add(new ModelPart.Cube((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat(),
                                 (originX - pivotX), (((originY + sizeY) * -1) + pivotY), (originZ - pivotZ),
                                 sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, info.getHeight(), info.getWidth()));
                     }
@@ -102,11 +102,11 @@ public class GeometryUtil {
                 if (parentPart != null) {
                     // This appears to be a difference between Bedrock and Java - pivots are carried over for us
                     JsonArray parentPivot = parentPart.getAsJsonArray("pivot");
-                    part.setPivot(pivotX - parentPivot.get(0).getAsFloat(),
+                    part.setPos(pivotX - parentPivot.get(0).getAsFloat(),
                             pivotY - parentPivot.get(1).getAsFloat(),
                             pivotZ - parentPivot.get(2).getAsFloat());
                 } else {
-                    part.setPivot(pivotX, pivotY, pivotZ);
+                    part.setPos(pivotX, pivotY, pivotZ);
                 }
 
                 switch (name) { // Also do this with the overlays? Those are final, though.
@@ -131,11 +131,11 @@ public class GeometryUtil {
 
             ensureAvailable(root.children, "ear");
             root.children.computeIfAbsent("cloak", (string) -> // Required to allow a cape to render
-                            BipedEntityModel.getModelData(Dilation.NONE, 0.0F).getRoot().addChild(string,
-                                    ModelPartBuilder.create()
-                                            .uv(0, 0)
-                                            .cuboid(-5.0F, 0.0F, -1.0F, 10.0F, 16.0F, 1.0F, Dilation.NONE, 1.0F, 0.5F),
-                                    ModelTransform.pivot(0.0F, 0.0F, 0.0F)).createPart(64, 64));
+                            HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F).getRoot().addOrReplaceChild(string,
+                                    CubeListBuilder.create()
+                                            .texOffs(0, 0)
+                                            .addBox(-5.0F, 0.0F, -1.0F, 10.0F, 16.0F, 1.0F, CubeDeformation.NONE, 1.0F, 0.5F),
+                                    PartPose.offset(0.0F, 0.0F, 0.0F)).bake(64, 64));
             ensureAvailable(root.children, "left_sleeve");
             ensureAvailable(root.children, "right_sleeve");
             ensureAvailable(root.children, "left_pants");

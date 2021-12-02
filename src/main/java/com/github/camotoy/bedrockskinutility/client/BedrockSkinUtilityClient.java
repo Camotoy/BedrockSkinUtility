@@ -8,7 +8,6 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
 @Environment(EnvType.CLIENT)
 public class BedrockSkinUtilityClient implements ClientModInitializer {
     private final Logger logger = LogManager.getLogger("BedrockSkinUtility");

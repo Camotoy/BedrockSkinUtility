@@ -2,10 +2,10 @@ package com.github.camotoy.bedrockskinutility.client.pluginmessage;
 
 import com.github.camotoy.bedrockskinutility.client.SkinManager;
 import com.github.camotoy.bedrockskinutility.client.SkinUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.network.PacketByteBuf;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.FriendlyByteBuf;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.image.BufferedImage;
@@ -20,12 +20,12 @@ public abstract class Decoder {
         this.skinManager = skinManager;
     }
 
-    public abstract void decode(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf);
+    public abstract void decode(Minecraft client, ClientPacketListener handler, FriendlyByteBuf buf);
 
     /**
      * Read a string in a platform-friendly way - Mojang's way uses VarInts which aren't easily implemented on our end.
      */
-    protected String readString(PacketByteBuf buf) {
+    protected String readString(FriendlyByteBuf buf) {
         int length = buf.readInt();
         String result = buf.toString(buf.readerIndex(), length, StandardCharsets.UTF_8);
         buf.readerIndex(buf.readerIndex() + length);
@@ -39,7 +39,7 @@ public abstract class Decoder {
         for (int currentWidth = 0; currentWidth < width; currentWidth++) {
             for (int currentHeight = 0; currentHeight < height; currentHeight++) {
                 int rgba = bufferedImage.getRGB(currentWidth, currentHeight);
-                nativeImage.setPixelColor(currentWidth, currentHeight, NativeImage.getAbgrColor(
+                nativeImage.setPixelRGBA(currentWidth, currentHeight, NativeImage.combine(
                         (rgba >> 24) & 0xFF, rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF));
             }
         }

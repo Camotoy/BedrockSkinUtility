@@ -1,15 +1,15 @@
 package com.github.camotoy.bedrockskinutility.client.pluginmessage;
 
 import com.github.camotoy.bedrockskinutility.client.BedrockCachedProperties;
-import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.github.camotoy.bedrockskinutility.client.SkinManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
 
 import java.util.UUID;
@@ -21,7 +21,7 @@ public class CapeDecoder extends Decoder {
     }
 
     @Override
-    public void decode(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf) {
+    public void decode(Minecraft client, ClientPacketListener handler, FriendlyByteBuf buf) {
         int version = buf.readInt();
         if (version != 1) {
             this.logger.error("Could not load cape data! Is the mod and plugin updated?");
@@ -33,7 +33,7 @@ public class CapeDecoder extends Decoder {
         int height = buf.readInt();
 
         String capeId = readString(buf);
-        Identifier identifier = new Identifier("geyserskinmanager", capeId);
+        ResourceLocation identifier = new ResourceLocation("geyserskinmanager", capeId);
 
         byte[] capeData = new byte[buf.readInt()];
         buf.readBytes(capeData);
@@ -43,7 +43,7 @@ public class CapeDecoder extends Decoder {
 
         client.submit(() -> {
             // As of 1.17.1, identical identifiers do not result in multiple objects of the same type being registered
-            client.getTextureManager().registerTexture(identifier, new NativeImageBackedTexture(capeImage));
+            client.getTextureManager().register(identifier, new DynamicTexture(capeImage));
             applyCapeTexture(handler, playerUuid, identifier);
         });
     }
@@ -51,8 +51,8 @@ public class CapeDecoder extends Decoder {
     /**
      * Should be run from the main thread
      */
-    private void applyCapeTexture(ClientPlayNetworkHandler handler, UUID playerUuid, Identifier identifier) {
-        PlayerListEntry entry = handler.getPlayerListEntry(playerUuid);
+    private void applyCapeTexture(ClientPacketListener handler, UUID playerUuid, ResourceLocation identifier) {
+        PlayerInfo entry = handler.getPlayerInfo(playerUuid);
         if (entry == null) {
             // Save in the cache for later
             BedrockCachedProperties properties = skinManager.getCachedPlayers().getIfPresent(playerUuid);

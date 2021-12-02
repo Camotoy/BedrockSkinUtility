@@ -4,14 +4,14 @@ import com.github.camotoy.bedrockskinutility.client.BedrockSkinPluginMessageType
 import com.github.camotoy.bedrockskinutility.client.SkinManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
 
 public class GeyserSkinManagerListener implements ClientPlayNetworking.PlayChannelHandler {
-    private static final Identifier CHANNEL = new Identifier("bedrockskin", "data");
+    private static final ResourceLocation CHANNEL = new ResourceLocation("bedrockskin", "data");
 
     private final Logger logger;
     private final SkinManager skinManager;
@@ -30,7 +30,7 @@ public class GeyserSkinManagerListener implements ClientPlayNetworking.PlayChann
     }
 
     @Override
-    public void receive(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
+    public void receive(Minecraft client, ClientPacketListener handler, FriendlyByteBuf buf, PacketSender responseSender) {
         this.logger.info("Plugin message received from server!");
         /* Read plugin message start */
         int type = buf.readInt();

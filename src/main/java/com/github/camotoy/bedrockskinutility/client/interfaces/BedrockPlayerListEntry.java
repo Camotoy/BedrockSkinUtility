@@ -1,16 +1,16 @@
 package com.github.camotoy.bedrockskinutility.client.interfaces;
 
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.resources.ResourceLocation;
 
 public interface BedrockPlayerListEntry {
-    Identifier bedrockskinutility$getCape();
+    ResourceLocation bedrockskinutility$getCape();
 
-    PlayerEntityRenderer bedrockskinutility$getModel();
+    PlayerRenderer bedrockskinutility$getModel();
 
-    Identifier bedrockskinutility$getSkin();
+    ResourceLocation bedrockskinutility$getSkin();
 
-    void bedrockskinutility$setCape(Identifier identifier);
+    void bedrockskinutility$setCape(ResourceLocation identifier);
 
-    void bedrockskinutility$setSkinProperties(Identifier identifier, PlayerEntityRenderer model);
+    void bedrockskinutility$setSkinProperties(ResourceLocation identifier, PlayerRenderer model);
 }
