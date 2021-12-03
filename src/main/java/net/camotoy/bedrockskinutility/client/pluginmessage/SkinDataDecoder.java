@@ -1,9 +1,9 @@
-package com.github.camotoy.bedrockskinutility.client.pluginmessage;
+package net.camotoy.bedrockskinutility.client.pluginmessage;
 
-import com.github.camotoy.bedrockskinutility.client.*;
-import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
-import com.github.camotoy.bedrockskinutility.client.mixin.PlayerEntityRendererChangeModel;
 import com.mojang.blaze3d.platform.NativeImage;
+import net.camotoy.bedrockskinutility.client.*;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import net.camotoy.bedrockskinutility.client.mixin.PlayerEntityRendererChangeModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;

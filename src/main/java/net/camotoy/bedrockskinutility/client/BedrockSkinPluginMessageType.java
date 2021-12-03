@@ -1,4 +1,4 @@
-package com.github.camotoy.bedrockskinutility.client;
+package net.camotoy.bedrockskinutility.client;
 
 public enum BedrockSkinPluginMessageType {
     CAPE,

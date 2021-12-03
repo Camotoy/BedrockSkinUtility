@@ -1,7 +1,7 @@
-package com.github.camotoy.bedrockskinutility.client.pluginmessage;
+package net.camotoy.bedrockskinutility.client.pluginmessage;
 
-import com.github.camotoy.bedrockskinutility.client.SkinInfo;
-import com.github.camotoy.bedrockskinutility.client.SkinManager;
+import net.camotoy.bedrockskinutility.client.SkinInfo;
+import net.camotoy.bedrockskinutility.client.SkinManager;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;

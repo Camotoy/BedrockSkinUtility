@@ -1,6 +1,6 @@
-package com.github.camotoy.bedrockskinutility.client;
+package net.camotoy.bedrockskinutility.client;
 
-import com.github.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerListener;
+import net.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerListener;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

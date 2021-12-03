@@ -1,4 +1,4 @@
-package com.github.camotoy.bedrockskinutility.client;
+package net.camotoy.bedrockskinutility.client;
 
 import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;

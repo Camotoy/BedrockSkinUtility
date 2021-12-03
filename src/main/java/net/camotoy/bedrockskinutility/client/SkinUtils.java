@@ -23,7 +23,7 @@
  * @link https://github.com/GeyserMC/Floodgate
  */
 
-package com.github.camotoy.bedrockskinutility.client;
+package net.camotoy.bedrockskinutility.client;
 
 import java.awt.image.BufferedImage;
 

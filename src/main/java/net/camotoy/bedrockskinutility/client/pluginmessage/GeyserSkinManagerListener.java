@@ -1,7 +1,7 @@
-package com.github.camotoy.bedrockskinutility.client.pluginmessage;
+package net.camotoy.bedrockskinutility.client.pluginmessage;
 
-import com.github.camotoy.bedrockskinutility.client.BedrockSkinPluginMessageType;
-import com.github.camotoy.bedrockskinutility.client.SkinManager;
+import net.camotoy.bedrockskinutility.client.BedrockSkinPluginMessageType;
+import net.camotoy.bedrockskinutility.client.SkinManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.Minecraft;

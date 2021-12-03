@@ -1,4 +1,4 @@
-package com.github.camotoy.bedrockskinutility.client.interfaces;
+package net.camotoy.bedrockskinutility.client.interfaces;
 
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.resources.ResourceLocation;

@@ -1,4 +1,4 @@
-package com.github.camotoy.bedrockskinutility.client;
+package net.camotoy.bedrockskinutility.client;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;

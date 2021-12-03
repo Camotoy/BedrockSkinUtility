@@ -1,4 +1,4 @@
-package com.github.camotoy.bedrockskinutility.client.mixin;
+package net.camotoy.bedrockskinutility.client.mixin;
 
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;

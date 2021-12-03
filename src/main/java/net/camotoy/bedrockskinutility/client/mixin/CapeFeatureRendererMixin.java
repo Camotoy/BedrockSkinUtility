@@ -1,4 +1,4 @@
-package com.github.camotoy.bedrockskinutility.client.mixin;
+package net.camotoy.bedrockskinutility.client.mixin;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.layers.CapeLayer;

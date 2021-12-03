@@ -1,8 +1,8 @@
-package com.github.camotoy.bedrockskinutility.client.mixin;
+package net.camotoy.bedrockskinutility.client.mixin;
 
-import com.github.camotoy.bedrockskinutility.client.BedrockCachedProperties;
-import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
-import com.github.camotoy.bedrockskinutility.client.SkinManager;
+import net.camotoy.bedrockskinutility.client.BedrockCachedProperties;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import net.camotoy.bedrockskinutility.client.SkinManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.multiplayer.ClientPacketListener;

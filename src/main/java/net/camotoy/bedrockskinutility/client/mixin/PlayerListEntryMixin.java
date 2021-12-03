@@ -1,6 +1,6 @@
-package com.github.camotoy.bedrockskinutility.client.mixin;
+package net.camotoy.bedrockskinutility.client.mixin;
 
-import com.github.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;

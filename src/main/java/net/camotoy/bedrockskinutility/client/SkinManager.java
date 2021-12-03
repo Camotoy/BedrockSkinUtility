@@ -1,8 +1,8 @@
-package com.github.camotoy.bedrockskinutility.client;
+package net.camotoy.bedrockskinutility.client;
 
-import com.github.camotoy.bedrockskinutility.client.pluginmessage.CapeDecoder;
-import com.github.camotoy.bedrockskinutility.client.pluginmessage.SkinDataDecoder;
-import com.github.camotoy.bedrockskinutility.client.pluginmessage.SkinInfoDecoder;
+import net.camotoy.bedrockskinutility.client.pluginmessage.CapeDecoder;
+import net.camotoy.bedrockskinutility.client.pluginmessage.SkinDataDecoder;
+import net.camotoy.bedrockskinutility.client.pluginmessage.SkinInfoDecoder;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.logging.log4j.Logger;
