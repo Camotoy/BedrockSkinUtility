@@ -23,7 +23,7 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.equals("com.github.camotoy.bedrockskinutility.client.mixin.CapeFeatureRendererMixin")) {
+        if (mixinClassName.equals("net.camotoy.bedrockskinutility.client.mixin.CapeFeatureRendererMixin")) {
             boolean capes = FabricLoader.getInstance().getModContainer("capes").isPresent();
             if (capes) {
                 // the Capes mod has a Mixin that just sets all capes to transparent, so we don't need this Mixin
