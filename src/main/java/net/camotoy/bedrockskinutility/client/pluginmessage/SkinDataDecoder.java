@@ -57,7 +57,8 @@ public class SkinDataDecoder extends Decoder {
             BedrockPlayerEntityModel<AbstractClientPlayer> model = geometryUtil.bedrockGeoToJava(info);
             if (model != null) {
                 EntityRendererProvider.Context context = new EntityRendererProvider.Context(client.getEntityRenderDispatcher(),
-                        client.getItemRenderer(), client.getResourceManager(), client.getEntityModels(), client.font);
+                        client.getItemRenderer(), client.getBlockRenderer(), client.getEntityRenderDispatcher().getItemInHandRenderer(),
+                        client.getResourceManager(), client.getEntityModels(), client.font);
                 renderer = new PlayerRenderer(context, false);
                 ((PlayerEntityRendererChangeModel) renderer).bedrockskinutility$setModel(model);
             } else {

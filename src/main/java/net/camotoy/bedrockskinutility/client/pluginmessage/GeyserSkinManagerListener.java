@@ -34,11 +34,12 @@ public class GeyserSkinManagerListener implements ClientPlayNetworking.PlayChann
         this.logger.info("Plugin message received from server!");
         /* Read plugin message start */
         int type = buf.readInt();
-        if (BedrockSkinPluginMessageType.values().length < type) {
+        BedrockSkinPluginMessageType[] values = BedrockSkinPluginMessageType.values();
+        if (values.length < type) {
             this.logger.error("Unknown plugin message type received! Is the mod and plugin updated? Type: " + type);
             return;
         }
-        BedrockSkinPluginMessageType pluginMessageType = BedrockSkinPluginMessageType.values()[type];
+        BedrockSkinPluginMessageType pluginMessageType = values[type];
         if (pluginMessageType == BedrockSkinPluginMessageType.CAPE) {
             skinManager.getCapeDecoder().decode(client, handler, buf);
         } else if (pluginMessageType == BedrockSkinPluginMessageType.SKIN_INFORMATION) {
