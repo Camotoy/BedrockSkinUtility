@@ -34,7 +34,7 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientGamePacketL
     public void bedrockskinutility$onPlayerAdd(ClientboundPlayerInfoUpdatePacket packet, CallbackInfo ci) {
         if (packet.actions().contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
             for (ClientboundPlayerInfoUpdatePacket.Entry entry : packet.entries()) {
-                BedrockCachedProperties properties = SkinManager.getInstance().getCachedPlayers().getIfPresent(entry.profileId()); // TODO test
+                BedrockCachedProperties properties = SkinManager.getInstance().getCachedPlayers().getIfPresent(entry.profileId());
                 if (properties != null) {
                     BedrockPlayerListEntry bedrockEntry = ((BedrockPlayerListEntry) this.playerInfoMap.get(entry.profileId()));
                     if (properties.skin != null) {

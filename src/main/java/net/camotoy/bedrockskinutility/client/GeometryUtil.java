@@ -22,19 +22,31 @@ public class GeometryUtil {
     }
 
     public BedrockPlayerEntityModel<AbstractClientPlayer> bedrockGeoToJava(SkinInfo info) {
+        // There are some times when the skin image file is larger than the geometry UV points.
+        // In this case, we need to scale UV calls
+        // https://github.com/Camotoy/BedrockSkinUtility/issues/9
+        int uvHeight = info.getHeight();
+        int uvWidth = info.getWidth();
+
         // Construct a list of all bones we need to translate
         List<JsonObject> bones = new ArrayList<>();
         try {
-            String geometryName;
+            String geometryName = info.getGeometryName().getAsJsonObject("geometry").get("default").getAsString();
             if (info.getGeometry().get("format_version").getAsString().equals("1.8.0")) {
-                geometryName = info.getGeometryName().getAsJsonObject("geometry").get("default").getAsString();
                 for (JsonElement node : info.getGeometry().getAsJsonObject(geometryName).getAsJsonArray("bones")) {
                     bones.add(node.getAsJsonObject());
                 }
             } else { // Seen with format_version 1.12.0
-                geometryName = "minecraft:geometry";
-                for (JsonElement node : info.getGeometry().getAsJsonArray(geometryName)) {
-                    for (JsonElement subNode : node.getAsJsonObject().get("bones").getAsJsonArray()) {
+                for (JsonElement node : info.getGeometry().getAsJsonArray("minecraft:geometry")) {
+                    JsonObject o = node.getAsJsonObject();
+                    JsonObject description = o.get("description").getAsJsonObject();
+                    if (!description.get("identifier").getAsString().equals(geometryName)) {
+                        continue;
+                    } else {
+                        uvHeight = description.get("texture_height").getAsInt();
+                        uvWidth = description.get("texture_width").getAsInt();
+                    }
+                    for (JsonElement subNode : o.get("bones").getAsJsonArray()) {
                         bones.add(subNode.getAsJsonObject());
                     }
                 }
@@ -93,7 +105,7 @@ public class GeometryUtil {
                         // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
                         cuboids.add(new ModelPart.Cube((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat(),
                                 (originX - pivotX), (((originY + sizeY) * -1) + pivotY), (originZ - pivotZ),
-                                sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, info.getHeight(), info.getWidth()));
+                                sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, uvHeight, uvWidth));
                     }
                 }
 
