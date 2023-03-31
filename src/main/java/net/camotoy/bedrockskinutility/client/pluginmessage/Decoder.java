@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.FastColor;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.image.BufferedImage;
@@ -39,7 +40,7 @@ public abstract class Decoder {
         for (int currentWidth = 0; currentWidth < width; currentWidth++) {
             for (int currentHeight = 0; currentHeight < height; currentHeight++) {
                 int rgba = bufferedImage.getRGB(currentWidth, currentHeight);
-                nativeImage.setPixelRGBA(currentWidth, currentHeight, NativeImage.combine(
+                nativeImage.setPixelRGBA(currentWidth, currentHeight, FastColor.ARGB32.color(
                         (rgba >> 24) & 0xFF, rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF));
             }
         }

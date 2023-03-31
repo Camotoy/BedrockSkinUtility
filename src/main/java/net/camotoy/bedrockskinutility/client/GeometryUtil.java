@@ -10,11 +10,15 @@ import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.Direction;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public class GeometryUtil {
+    // Copied from CubeListBuilder
+    private static final Set<Direction> ALL_VISIBLE = EnumSet.allOf(Direction.class);
+
     private final Logger logger;
 
     public GeometryUtil(Logger logger) {
@@ -104,8 +108,8 @@ public class GeometryUtil {
                         // The Y needs to be inverted, for whatever reason
                         // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
                         cuboids.add(new ModelPart.Cube((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat(),
-                                (originX - pivotX), (((originY + sizeY) * -1) + pivotY), (originZ - pivotZ),
-                                sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, uvHeight, uvWidth));
+                                (originX - pivotX), (-(originY + sizeY) + pivotY), (originZ - pivotZ),
+                                sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, uvHeight, uvWidth, ALL_VISIBLE));
                     }
                 }
 
