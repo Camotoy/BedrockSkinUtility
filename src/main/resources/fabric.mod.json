@@ -20,8 +20,8 @@
     "BedrockSkinUtility.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.12.6",
-    "fabric": "*",
-    "minecraft": ">=1.19.4"
+    "fabricloader": ">=0.14.23",
+    "fabric-api": "*",
+    "minecraft": ">=1.20.2"
   }
 }
