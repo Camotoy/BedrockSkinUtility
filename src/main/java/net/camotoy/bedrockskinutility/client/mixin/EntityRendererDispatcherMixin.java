@@ -2,6 +2,7 @@ package net.camotoy.bedrockskinutility.client.mixin;
 
 import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
@@ -16,14 +17,14 @@ public abstract class EntityRendererDispatcherMixin {
 
     @Inject(
             method = "getRenderer",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/player/AbstractClientPlayer;getModelName()Ljava/lang/String;"),
+            at = @At("RETURN"),
             cancellable = true
     )
     public void getRenderer(Entity entity, CallbackInfoReturnable<EntityRenderer<?>> cir) {
-        PlayerInfo playerListEntry = ((BedrockAbstractClientPlayerEntity) entity).bedrockskinutility$getPlayerListEntry();
+        PlayerInfo playerListEntry = null;
+        if(entity instanceof AbstractClientPlayer) playerListEntry = ((BedrockAbstractClientPlayerEntity) entity).bedrockskinutility$getPlayerListEntry();
         if (playerListEntry != null) {
-            PlayerRenderer renderer = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getModel();
+            PlayerRenderer renderer = ((BedrockPlayerListEntry)(Object)(playerListEntry.getSkin())).bedrockskinutility$getModel();
             if (renderer != null) {
                 cir.setReturnValue(renderer);
             }
