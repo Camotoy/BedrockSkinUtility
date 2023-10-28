@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.camotoy.bedrockskinutility.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "BedrockAbstractClientPlayerEntity",
+    "CapeFeatureRendererMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "EntityRendererDispatcherMixin",
+    "PlayerEntityRendererChangeModel",
+    "PlayerListEntryMixin"
+  ],
+  "plugin": "net.camotoy.bedrockskinutility.client.MixinConfigPlugin",
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
