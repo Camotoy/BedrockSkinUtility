@@ -1,5 +1,6 @@
 # User-specific stuff
 .idea/
+.vscode/
 
 *.iml
 *.ipr
@@ -113,6 +114,8 @@ gradle-app.setting
 
 # Common working directory
 run/
+remappedSrc/
+bin/
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar

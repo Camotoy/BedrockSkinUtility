@@ -1,8 +1,8 @@
 package net.camotoy.bedrockskinutility.client.mixin;
 
 import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(PlayerInfo.class)
+@Mixin(PlayerSkin.class)
 public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
     /**
      * The identifier pointing to the Bedrock cape sent from the server.
@@ -42,7 +42,7 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
         // We don't need to set the ELYTRA texture - that appears to work as a first check, and then falls back to the cape
     }
 
-    @Inject(method = "getCapeLocation", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "capeTexture", at = @At("RETURN"), cancellable = true)
     public void bedrockskinutility$getCapeTexture(CallbackInfoReturnable<@Nullable ResourceLocation> cir) {
         // Don't overwrite existing capes
         if (cir.getReturnValue() == null && this.bedrockCape != null) {
@@ -50,7 +50,7 @@ public abstract class PlayerListEntryMixin implements BedrockPlayerListEntry {
         }
     }
 
-    @Inject(method = "getSkinLocation", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "texture", at = @At("HEAD"), cancellable = true)
     public void bedrockskinutility$getSkinTexture(CallbackInfoReturnable<ResourceLocation> cir) {
         if (bedrockSkin != null) {
             cir.setReturnValue(bedrockSkin);
