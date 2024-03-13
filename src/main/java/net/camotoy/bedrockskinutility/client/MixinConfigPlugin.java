@@ -24,10 +24,11 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.equals("net.camotoy.bedrockskinutility.client.mixin.CapeFeatureRendererMixin")) {
-            boolean capes = FabricLoader.getInstance().getModContainer("capes").isPresent();
+            boolean capes = FabricLoader.getInstance().getModContainer("capes").isPresent()
+                    || FabricLoader.getInstance().getModContainer("cosmetica").isPresent();
             if (capes) {
-                // the Capes mod has a Mixin that just sets all capes to transparent, so we don't need this Mixin
-                LoggerFactory.getLogger(MixinConfigPlugin.class).info("Disabling transparent cape mixin in BedrockSkinUtility as the Capes mod is also installed.");
+                // these mods have Mixins that just set all capes to transparent, so we don't need this Mixin
+                LoggerFactory.getLogger(MixinConfigPlugin.class).info("Disabling transparent cape mixin in BedrockSkinUtility as another cape-related mod is also installed.");
                 return false;
             }
         }
