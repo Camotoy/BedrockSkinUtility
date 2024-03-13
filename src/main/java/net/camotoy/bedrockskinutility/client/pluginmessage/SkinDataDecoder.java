@@ -2,8 +2,9 @@ package net.camotoy.bedrockskinutility.client.pluginmessage;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.camotoy.bedrockskinutility.client.*;
-import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerInfo;
 import net.camotoy.bedrockskinutility.client.mixin.PlayerEntityRendererChangeModel;
+import net.camotoy.bedrockskinutility.client.mixin.PlayerSkinFieldAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -11,6 +12,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
@@ -90,7 +92,17 @@ public class SkinDataDecoder extends Decoder {
             properties.model = renderer;
             properties.skin = identifier;
         } else {
-            ((BedrockPlayerListEntry) entry).bedrockskinutility$setSkinProperties(identifier, renderer);
+            try {
+                ((BedrockPlayerInfo) entry).bedrockskinutility$setModel(renderer);
+
+                final PlayerSkinBuilder builder = new PlayerSkinBuilder(entry.getSkin());
+                builder.texture = identifier;
+                builder.bedrockSkin = true;
+                final PlayerSkin playerSkin = builder.build();
+                ((PlayerSkinFieldAccessor) entry).setPlayerSkin(() -> playerSkin);
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
         }
     }
 }

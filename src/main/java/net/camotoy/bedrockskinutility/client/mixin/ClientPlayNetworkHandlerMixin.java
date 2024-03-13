@@ -1,12 +1,15 @@
 package net.camotoy.bedrockskinutility.client.mixin;
 
 import net.camotoy.bedrockskinutility.client.BedrockCachedProperties;
+import net.camotoy.bedrockskinutility.client.PlayerSkinBuilder;
 import net.camotoy.bedrockskinutility.client.SkinManager;
-import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerInfo;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerSkin;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -36,13 +39,20 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientGamePacketL
             for (ClientboundPlayerInfoUpdatePacket.Entry entry : packet.entries()) {
                 BedrockCachedProperties properties = SkinManager.getInstance().getCachedPlayers().getIfPresent(entry.profileId());
                 if (properties != null) {
-                    BedrockPlayerListEntry bedrockEntry = ((BedrockPlayerListEntry) this.playerInfoMap.get(entry.profileId()));
+                    final PlayerInfo playerInfo = this.playerInfoMap.get(entry.profileId());
+                    final PlayerSkinBuilder builder = new PlayerSkinBuilder(playerInfo.getSkin());
                     if (properties.skin != null) {
-                        bedrockEntry.bedrockskinutility$setSkinProperties(properties.skin, properties.model);
+                        builder.texture = properties.skin;
+                        builder.bedrockSkin = true;
+                        ((BedrockPlayerInfo) playerInfo).bedrockskinutility$setModel(properties.model);
                     }
-                    if (properties.cape != null) {
-                        bedrockEntry.bedrockskinutility$setCape(properties.cape);
+                    if (properties.cape != null && builder.capeTexture == null) {
+                        // Do not overwrite existing capes
+                        builder.capeTexture = properties.cape;
+                        builder.bedrockCape = true;
                     }
+                    final PlayerSkin playerSkin = builder.build();
+                    ((PlayerSkinFieldAccessor) playerInfo).setPlayerSkin(() -> playerSkin);
                 }
             }
         }
@@ -56,12 +66,14 @@ public abstract class ClientPlayNetworkHandlerMixin implements ClientGamePacketL
         for (UUID uuid : packet.profileIds()) {
             PlayerInfo playerListEntry = this.playerInfoMap.get(uuid);
             if (playerListEntry != null) {
-                ResourceLocation skinIdentifier = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getSkin();
-                ResourceLocation capeIdentifier = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getCape();
+                final PlayerSkin playerSkin = playerListEntry.getSkin();
+                BedrockPlayerSkin bedrockSkin = (BedrockPlayerSkin) (Object) playerSkin;
+                ResourceLocation skinIdentifier = bedrockSkin.bedrockskinutility$bedrockSkin() ? playerSkin.texture() : null;
+                ResourceLocation capeIdentifier = bedrockSkin.bedrockskinutility$bedrockCape() ? playerSkin.capeTexture() : null;
                 if (skinIdentifier != null || capeIdentifier != null) {
                     BedrockCachedProperties properties = new BedrockCachedProperties();
                     properties.skin = skinIdentifier;
-                    properties.model = ((BedrockPlayerListEntry) playerListEntry).bedrockskinutility$getModel();
+                    properties.model = ((BedrockPlayerInfo) playerListEntry).bedrockskinutility$getModel();
                     properties.cape = capeIdentifier;
                     SkinManager.getInstance().getCachedPlayers().put(uuid, properties);
                 }

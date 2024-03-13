@@ -9,7 +9,9 @@
     "ClientPlayNetworkHandlerMixin",
     "EntityRendererDispatcherMixin",
     "PlayerEntityRendererChangeModel",
-    "PlayerListEntryMixin"
+    "PlayerInfoMixin",
+    "PlayerSkinFieldAccessor",
+    "PlayerSkinMixin"
   ],
   "plugin": "net.camotoy.bedrockskinutility.client.MixinConfigPlugin",
   "injectors": {

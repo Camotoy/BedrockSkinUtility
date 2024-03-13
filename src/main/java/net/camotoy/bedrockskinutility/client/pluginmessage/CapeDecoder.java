@@ -1,13 +1,15 @@
 package net.camotoy.bedrockskinutility.client.pluginmessage;
 
-import net.camotoy.bedrockskinutility.client.BedrockCachedProperties;
-import net.camotoy.bedrockskinutility.client.SkinManager;
-import net.camotoy.bedrockskinutility.client.interfaces.BedrockPlayerListEntry;
 import com.mojang.blaze3d.platform.NativeImage;
+import net.camotoy.bedrockskinutility.client.BedrockCachedProperties;
+import net.camotoy.bedrockskinutility.client.PlayerSkinBuilder;
+import net.camotoy.bedrockskinutility.client.SkinManager;
+import net.camotoy.bedrockskinutility.client.mixin.PlayerSkinFieldAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +64,11 @@ public class CapeDecoder extends Decoder {
             }
             properties.cape = identifier;
         } else {
-            ((BedrockPlayerListEntry) entry).bedrockskinutility$setCape(identifier);
+            final PlayerSkinBuilder builder = new PlayerSkinBuilder(entry.getSkin());
+            builder.capeTexture = identifier;
+            builder.bedrockCape = true;
+            final PlayerSkin playerSkin = builder.build();
+            ((PlayerSkinFieldAccessor) entry).setPlayerSkin(() -> playerSkin);
         }
     }
 }
