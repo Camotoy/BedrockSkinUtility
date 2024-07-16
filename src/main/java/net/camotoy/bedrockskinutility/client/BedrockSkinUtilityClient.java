@@ -1,10 +1,12 @@
 package net.camotoy.bedrockskinutility.client;
 
+import net.camotoy.bedrockskinutility.client.pluginmessage.BedrockMessageHandler;
 import net.camotoy.bedrockskinutility.client.pluginmessage.GeyserSkinManagerListener;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,15 +14,12 @@ import org.apache.logging.log4j.Logger;
 public class BedrockSkinUtilityClient implements ClientModInitializer {
     private final Logger logger = LogManager.getLogger("BedrockSkinUtility");
 
-    private GeyserSkinManagerListener pluginMessageListener;
-
     @Override
     public void onInitializeClient() {
         logger.info("Hello from BedrockClientSkinUtility!");
 
-        this.pluginMessageListener = new GeyserSkinManagerListener(this.logger, new SkinManager(this.logger));
-        this.pluginMessageListener.register();
-
-        ClientLifecycleEvents.CLIENT_STOPPING.register((client -> this.pluginMessageListener.unregister()));
+        var handler = new BedrockMessageHandler(logger, new SkinManager());
+        PayloadTypeRegistry.playS2C().register(GeyserSkinManagerListener.TYPE, GeyserSkinManagerListener.STREAM_CODEC);
+        ClientPlayNetworking.registerGlobalReceiver(GeyserSkinManagerListener.TYPE, (payload, context) -> payload.handle(context, handler));
     }
 }

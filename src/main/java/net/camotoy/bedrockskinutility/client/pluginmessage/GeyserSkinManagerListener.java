@@ -1,51 +1,32 @@
 package net.camotoy.bedrockskinutility.client.pluginmessage;
 
 import net.camotoy.bedrockskinutility.client.BedrockSkinPluginMessageType;
-import net.camotoy.bedrockskinutility.client.SkinManager;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.camotoy.bedrockskinutility.client.pluginmessage.data.BaseSkinInfo;
+import net.camotoy.bedrockskinutility.client.pluginmessage.data.BedrockData;
+import net.camotoy.bedrockskinutility.client.pluginmessage.data.CapeData;
+import net.camotoy.bedrockskinutility.client.pluginmessage.data.SkinData;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.Logger;
 
-public class GeyserSkinManagerListener implements ClientPlayNetworking.PlayChannelHandler {
-    private static final ResourceLocation CHANNEL = new ResourceLocation("bedrockskin", "data");
-
-    private final Logger logger;
-    private final SkinManager skinManager;
-
-    public GeyserSkinManagerListener(Logger logger, SkinManager skinManager) {
-        this.logger = logger;
-        this.skinManager = skinManager;
-    }
-
-    public void register() {
-        ClientPlayNetworking.registerGlobalReceiver(CHANNEL, this);
-    }
-
-    public void unregister() {
-        ClientPlayNetworking.unregisterGlobalReceiver(CHANNEL);
-    }
-
-    @Override
-    public void receive(Minecraft client, ClientPacketListener handler, FriendlyByteBuf buf, PacketSender responseSender) {
-        this.logger.info("Plugin message received from server!");
-        /* Read plugin message start */
+public final class GeyserSkinManagerListener {
+    public static final CustomPacketPayload.Type<BedrockData> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath("bedrockskin", "data"));
+    public static final StreamCodec<FriendlyByteBuf, BedrockData> STREAM_CODEC = StreamCodec.of(null, buf -> {
         int type = buf.readInt();
         BedrockSkinPluginMessageType[] values = BedrockSkinPluginMessageType.values();
         if (values.length < type) {
-            this.logger.error("Unknown plugin message type received! Is the mod and plugin updated? Type: " + type);
-            return;
+            throw new RuntimeException("Unknown plugin message type received! Is the mod and plugin updated? Type: " + type);
         }
         BedrockSkinPluginMessageType pluginMessageType = values[type];
-        if (pluginMessageType == BedrockSkinPluginMessageType.CAPE) {
-            skinManager.getCapeDecoder().decode(client, handler, buf);
-        } else if (pluginMessageType == BedrockSkinPluginMessageType.SKIN_INFORMATION) {
-            skinManager.getSkinInfoDecoder().decode(client, handler, buf);
-        } else if (pluginMessageType == BedrockSkinPluginMessageType.SKIN_DATA) {
-            skinManager.getSkinDataDecoder().decode(client, handler, buf);
-        }
+        return switch (pluginMessageType) {
+            case CAPE -> CapeData.STREAM_DECODER.decode(buf);
+            case SKIN_INFORMATION -> BaseSkinInfo.STREAM_DECODER.decode(buf);
+            case SKIN_DATA -> SkinData.STREAM_DECODER.decode(buf);
+        };
+    });
+
+    private GeyserSkinManagerListener() {
     }
 }

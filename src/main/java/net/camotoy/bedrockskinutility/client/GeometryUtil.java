@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -11,21 +12,15 @@ import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Direction;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public class GeometryUtil {
+    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
     // Copied from CubeListBuilder
     private static final Set<Direction> ALL_VISIBLE = EnumSet.allOf(Direction.class);
 
-    private final Logger logger;
-
-    public GeometryUtil(Logger logger) {
-        this.logger = logger;
-    }
-
-    public BedrockPlayerEntityModel<AbstractClientPlayer> bedrockGeoToJava(SkinInfo info) {
+    public static BedrockPlayerEntityModel<AbstractClientPlayer> bedrockGeoToJava(SkinInfo info) {
         // There are some times when the skin image file is larger than the geometry UV points.
         // In this case, we need to scale UV calls
         // https://github.com/Camotoy/BedrockSkinUtility/issues/9
@@ -56,7 +51,7 @@ public class GeometryUtil {
                 }
             }
         } catch (Exception e) {
-            this.logger.error("Error while parsing geometry!");
+            LOGGER.error("Error while parsing geometry!");
             e.printStackTrace();
             return null;
         }
@@ -161,12 +156,12 @@ public class GeometryUtil {
             // Create base model
             return new BedrockPlayerEntityModel<>(root.part);
         } catch (Exception e) {
-            this.logger.error("Error while parsing geometry into model!", e);
+            LOGGER.error("Error while parsing geometry into model!", e);
             return null;
         }
     }
 
-    private String adjustFormatting(String name) {
+    private static String adjustFormatting(String name) {
         if (name == null) {
             return null;
         }
@@ -183,7 +178,7 @@ public class GeometryUtil {
     /**
      * Ensure a part is created, or else the geometry will not load in 1.17.
      */
-    private void ensureAvailable(Map<String, ModelPart> children, String name) {
+    private static void ensureAvailable(Map<String, ModelPart> children, String name) {
         children.computeIfAbsent(name, (string) -> new ModelPart(Collections.emptyList(), Maps.newHashMap()));
     }
 
