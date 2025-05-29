@@ -18,7 +18,7 @@ import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.image.BufferedImage;
@@ -95,9 +95,18 @@ public final class BedrockMessageHandler {
             // Convert Bedrock JSON geometry into a class format that Java understands
             BedrockPlayerEntityModel<AbstractClientPlayer> model = GeometryUtil.bedrockGeoToJava(info);
             if (model != null) {
-                EntityRendererProvider.Context entityContext = new EntityRendererProvider.Context(client.getEntityRenderDispatcher(),
-                        client.getItemRenderer(), client.getBlockRenderer(), client.getEntityRenderDispatcher().getItemInHandRenderer(),
-                        client.getResourceManager(), client.getEntityModels(), client.font);
+                // Minecraft 1.21.2 EntityRendererProvider.Context constructor with 8 parameters
+                // Use null for MapRenderer and EquipmentModelSet if not available
+                EntityRendererProvider.Context entityContext = new EntityRendererProvider.Context(
+                        client.getEntityRenderDispatcher(),
+                        client.getItemRenderer(),
+                        null, // MapRenderer - not available, use null
+                        client.getBlockRenderer(),
+                        client.getResourceManager(),
+                        client.getEntityModels(),
+                        null, // EquipmentModelSet - not available, use null
+                        client.font
+                );
                 renderer = new PlayerRenderer(entityContext, false);
                 ((PlayerEntityRendererChangeModel) renderer).bedrockskinutility$setModel(model);
             } else {
@@ -150,8 +159,8 @@ public final class BedrockMessageHandler {
         for (int currentWidth = 0; currentWidth < width; currentWidth++) {
             for (int currentHeight = 0; currentHeight < height; currentHeight++) {
                 int rgba = bufferedImage.getRGB(currentWidth, currentHeight);
-                nativeImage.setPixelRGBA(currentWidth, currentHeight, FastColor.ARGB32.color(
-                        (rgba >> 24) & 0xFF, rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF));
+                nativeImage.setPixel(currentWidth, currentHeight, ARGB.color(
+                        (rgba >> 24) & 0xFF, (rgba >> 16) & 0xFF, (rgba >> 8) & 0xFF, rgba & 0xFF));
             }
         }
         return nativeImage;

@@ -20,7 +20,7 @@ public abstract class EntityRendererDispatcherMixin {
                     target = "Lnet/minecraft/client/player/AbstractClientPlayer;getSkin()Lnet/minecraft/client/resources/PlayerSkin;"),
             cancellable = true
     )
-    public void getRenderer(Entity entity, CallbackInfoReturnable<EntityRenderer<?>> cir) {
+    public void getRenderer(Entity entity, CallbackInfoReturnable<EntityRenderer<?, ?>> cir) {
         PlayerInfo playerListEntry = ((BedrockAbstractClientPlayerEntity) entity).bedrockskinutility$getPlayerListEntry();
         if (playerListEntry != null) {
             PlayerRenderer renderer = ((BedrockPlayerInfo) playerListEntry).bedrockskinutility$getModel();
