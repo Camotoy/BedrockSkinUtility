@@ -17,11 +17,16 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.client.resources.model.EquipmentAssetManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
 import org.apache.logging.log4j.Logger;
+import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 public final class BedrockMessageHandler {
@@ -38,7 +43,10 @@ public final class BedrockMessageHandler {
 
         context.client().submit(() -> {
             // As of 1.17.1, identical identifiers do not result in multiple objects of the same type being registered
-            context.client().getTextureManager().register(payload.identifier(), new DynamicTexture(capeImage));
+            context.client().getTextureManager().register(payload.identifier(), new DynamicTexture(() -> {
+                assert capeImage != null;
+                return payload.identifier().toString() + capeImage.hashCode();
+            }, capeImage));
             applyCapeTexture(context.client().getConnection(), payload.playerUuid(), payload.identifier());
         });
     }
@@ -66,6 +74,10 @@ public final class BedrockMessageHandler {
     }
 
     public void handle(BaseSkinInfo payload) {
+        if (payload == null) {
+            return;
+        }
+
         skinManager.getSkinInfo().put(payload.playerUuid(), new SkinInfo(payload.skinWidth(), payload.skinHeight(), payload.jsonGeometry(),
                 payload.jsonGeometryName(), payload.chunkCount()));
     }
@@ -88,17 +100,50 @@ public final class BedrockMessageHandler {
 
         NativeImage skinImage = toNativeImage(info.getData(), info.getWidth(), info.getHeight());
         PlayerRenderer renderer;
-        boolean setModel = info.getGeometry() != null;
+        boolean setModel = info.getGeometry() != null && !info.getGeometry().isEmpty();
+
+        ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath("geyserskinmanager", payload.playerUuid().toString());
 
         Minecraft client = context.client();
+
         if (setModel) {
-            // Convert Bedrock JSON geometry into a class format that Java understands
-            BedrockPlayerEntityModel<AbstractClientPlayer> model = GeometryUtil.bedrockGeoToJava(info);
+            // Ex: skinResourcePatch={"geometry":{"default":"geometry.humanoid.custom.1742391406.1704"}}
+            String requiredGeometry = null;
+            try {
+                if (info.getGeometryName() != null) {
+                    requiredGeometry = info.getGeometryName().getAsJsonObject()
+                            .getAsJsonObject("geometry").get("default").getAsString();
+                }
+            } catch (Exception ignored) {}
+
+            BedrockPlayerEntityModel<AbstractClientPlayer> model = null;
+
+            final List<BedrockGeometryModel> geometries;
+            try {
+                geometries = BedrockGeometryModel.fromJson(info.getGeometry());
+
+                if (!geometries.isEmpty()) {
+                    BedrockGeometryModel geometry = geometries.getFirst();
+                    if (requiredGeometry != null) {
+                        for (final BedrockGeometryModel geometryModel : geometries) {
+                            if (geometryModel.getIdentifier().equals(requiredGeometry)) {
+                                geometry = geometryModel;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Convert Bedrock JSON geometry into a class format that Java understands
+                    model = GeometryUtil.bedrockGeoToJava(geometry);
+                }
+            } catch (final Exception ignored) {
+            }
+
             if (model != null) {
                 EntityRendererProvider.Context entityContext = new EntityRendererProvider.Context(client.getEntityRenderDispatcher(),
-                        client.getItemRenderer(), client.getBlockRenderer(), client.getEntityRenderDispatcher().getItemInHandRenderer(),
-                        client.getResourceManager(), client.getEntityModels(), client.font);
-                renderer = new PlayerRenderer(entityContext, false);
+                        client.getItemModelResolver(), client.getMapRenderer(), client.getBlockRenderer(),
+                        client.getResourceManager(), client.getEntityModels(), new EquipmentAssetManager(), client.font);
+                renderer = new BedrockPlayerRenderer(entityContext, false, identifier);
                 ((PlayerEntityRendererChangeModel) renderer).bedrockskinutility$setModel(model);
             } else {
                 renderer = null;
@@ -107,9 +152,8 @@ public final class BedrockMessageHandler {
             renderer = null;
         }
 
-        ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath("geyserskinmanager", payload.playerUuid().toString());
         client.submit(() -> {
-            client.getTextureManager().register(identifier, new DynamicTexture(skinImage));
+            client.getTextureManager().register(identifier, new DynamicTexture(() -> identifier.toString() + skinImage.hashCode(), skinImage));
             applySkinTexture(client.getConnection(), payload.playerUuid(), identifier, renderer);
         });
     }
@@ -146,14 +190,17 @@ public final class BedrockMessageHandler {
     private NativeImage toNativeImage(byte[] data, int width, int height) {
         BufferedImage bufferedImage = SkinUtils.toBufferedImage(data, width, height);
 
-        NativeImage nativeImage = new NativeImage(width, height, true);
-        for (int currentWidth = 0; currentWidth < width; currentWidth++) {
-            for (int currentHeight = 0; currentHeight < height; currentHeight++) {
-                int rgba = bufferedImage.getRGB(currentWidth, currentHeight);
-                nativeImage.setPixelRGBA(currentWidth, currentHeight, FastColor.ARGB32.color(
-                        (rgba >> 24) & 0xFF, rgba & 0xFF, (rgba >> 8) & 0xFF, (rgba >> 16) & 0xFF));
-            }
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(bufferedImage, "png", outputStream);
+            return NativeImage.read(outputStream.toByteArray());
+        } catch (IOException ignored) {
+            return null;
         }
-        return nativeImage;
+    }
+
+    private static int getARGB(int index, byte[] data) {
+        return (data[index + 3] & 0xFF) << 24 | (data[index] & 0xFF) << 16 |
+                (data[index + 1] & 0xFF) << 8 | (data[index + 2] & 0xFF);
     }
 }

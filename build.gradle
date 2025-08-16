@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id 'fabric-loom' version '1.11-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -10,17 +11,31 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+repositories {
+    maven {
+        name = "Jitpack"
+        url = "https://jitpack.io"
+
+        content {
+            includeGroup "com.github.Oryxel"
+        }
+    }
+}
+
 dependencies {
-    //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-    // You may need to force-disable transitiveness on them.
+    implementation ("com.github.Oryxel:CubeConverter:916cadb12a") {
+        transitive = false
+    }
+}
+
+shadowJar {
+    relocate 'org.oryxel.cube', 'net.camotoy.bedrockskinutility.client.shaded.cubeconverter'
 }
 
 processResources {
@@ -31,17 +46,11 @@ processResources {
     }
 }
 
-// ensure that the encoding is set to UTF-8, no matter what the system default is
-// this fixes some edge cases with special characters not displaying correctly
-// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 }
 

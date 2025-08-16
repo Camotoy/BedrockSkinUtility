@@ -1,164 +1,106 @@
 package net.camotoy.bedrockskinutility.client;
 
 import com.google.common.collect.Maps;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.mojang.logging.LogUtils;
-import net.minecraft.client.model.HumanoidModel;
+import net.camotoy.bedrockskinutility.client.interfaces.BedrockModelPart;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeDeformation;
-import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Direction;
+import org.cube.converter.model.element.Cube;
+import org.cube.converter.model.element.Parent;
+import org.cube.converter.model.impl.bedrock.BedrockGeometryModel;
+import org.cube.converter.util.element.Position3V;
+import org.cube.converter.util.element.UVMap;
+import org.joml.Vector3f;
 
 import java.util.*;
 
 public class GeometryUtil {
-    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
-    // Copied from CubeListBuilder
-    private static final Set<Direction> ALL_VISIBLE = EnumSet.allOf(Direction.class);
+    private static final List<String> LEG_RELATED = List.of("leftleg", "rightleg");
 
-    public static BedrockPlayerEntityModel<AbstractClientPlayer> bedrockGeoToJava(SkinInfo info) {
+    public static BedrockPlayerEntityModel<AbstractClientPlayer> bedrockGeoToJava(BedrockGeometryModel geometry) {
         // There are some times when the skin image file is larger than the geometry UV points.
         // In this case, we need to scale UV calls
         // https://github.com/Camotoy/BedrockSkinUtility/issues/9
-        int uvHeight = info.getHeight();
-        int uvWidth = info.getWidth();
+        final float uvWidth = geometry.getTextureSize().getX();
+        final float uvHeight = geometry.getTextureSize().getY();
 
-        // Construct a list of all bones we need to translate
-        List<JsonObject> bones = new ArrayList<>();
-        try {
-            String geometryName = info.getGeometryName().getAsJsonObject("geometry").get("default").getAsString();
-            if (info.getGeometry().get("format_version").getAsString().equals("1.8.0")) {
-                for (JsonElement node : info.getGeometry().getAsJsonObject(geometryName).getAsJsonArray("bones")) {
-                    bones.add(node.getAsJsonObject());
-                }
-            } else { // Seen with format_version 1.12.0
-                for (JsonElement node : info.getGeometry().getAsJsonArray("minecraft:geometry")) {
-                    JsonObject o = node.getAsJsonObject();
-                    JsonObject description = o.get("description").getAsJsonObject();
-                    if (!description.get("identifier").getAsString().equals(geometryName)) {
-                        continue;
-                    } else {
-                        uvHeight = description.get("texture_height").getAsInt();
-                        uvWidth = description.get("texture_width").getAsInt();
-                    }
-                    for (JsonElement subNode : o.get("bones").getAsJsonArray()) {
-                        bones.add(subNode.getAsJsonObject());
-                    }
-                }
+        final Map<String, PartInfo> stringToPart = new HashMap<>();
+        for (final Parent bone : geometry.getParents()) {
+            final Map<String, ModelPart> children = Maps.newHashMap();
+            final ModelPart part = new ModelPart(List.of(), children);
+            // Arm and leg
+            boolean neededOffset = switch (bone.getName().toLowerCase(Locale.ROOT)) {
+                case "rightarm", "leftarm" -> true;
+                default -> false;
+            };
+
+            ((BedrockModelPart)((Object)part)).bedrockskinutility$setBedrockModel();
+            ((BedrockModelPart)((Object)part)).bedrockskinutility$setNeededOffset(neededOffset);
+            ((BedrockModelPart)((Object)part)).bedrockskinutility$setAngles(new Vector3f(bone.getRotation().getX() , bone.getRotation().getY(), bone.getRotation().getZ()));
+
+            boolean leg = LEG_RELATED.contains(bone.getName().toLowerCase(Locale.ROOT));
+            if (leg) {
+                part.setPos(0, bone.getPivot().getY(), 0);
+                part.setInitialPose(part.storePose());
+            } else {
+                ((BedrockModelPart)((Object)part)).bedrockskinutility$setPivot(new Vector3f(bone.getPivot().getX(), -bone.getPivot().getY() + 24.016F, bone.getPivot().getZ()));
             }
-        } catch (Exception e) {
-            LOGGER.error("Error while parsing geometry!");
-            e.printStackTrace();
-            return null;
+
+            // Java don't allow individual cubes to have their own rotation therefore, we have to separate each cube into ModelPart to be able to rotate.
+            for (final Cube cube : bone.getCubes().values()) {
+                final Position3V pos = cube.getPosition();
+
+                final float sizeX = cube.getSize().getX(), sizeY = cube.getSize().getY(), sizeZ = cube.getSize().getZ();
+                final float inflate = cube.getInflate();
+
+                final UVMap uvMap = cube.getUvMap().clone();
+
+                final Set<Direction> set = new HashSet<>();
+                for (final Direction direction : Direction.values()) {
+                    if (uvMap.getMap().containsKey(org.cube.converter.util.element.Direction.values()[direction.ordinal()])) {
+                        set.add(direction);
+                    }
+                }
+
+                final ModelPart.Cube cuboid = new ModelPart.Cube(0, 0, pos.getX(), leg ? pos.getY() : -(pos.getY() - 24.016F + sizeY), pos.getZ(), sizeX, sizeY, sizeZ, inflate, inflate, inflate, cube.isMirror(), uvWidth, uvHeight, set);
+                applyUVMap(cuboid, set, uvMap, uvWidth, uvHeight, cube.getInflate(), cube.isMirror());
+
+                final ModelPart cubePart = new ModelPart(List.of(cuboid), Map.of());
+                ((BedrockModelPart)((Object)cubePart)).bedrockskinutility$setPivot(new Vector3f(cube.getPivot().getX(), -cube.getPivot().getY() + 24.016F, cube.getPivot().getZ()));
+                ((BedrockModelPart)((Object)cubePart)).bedrockskinutility$setAngles(new Vector3f(cube.getRotation().getX(), cube.getRotation().getY(), cube.getRotation().getZ()));
+                ((BedrockModelPart)((Object)cubePart)).bedrockskinutility$setBedrockModel();
+                ((BedrockModelPart)((Object)cubePart)).bedrockskinutility$setNeededOffset(neededOffset);
+                children.put(cube.getParent() + cube.hashCode(), cubePart);
+            }
+
+            String parent = bone.getParent();
+            String name = bone.getName();
+            switch (name.toLowerCase(Locale.ROOT)) { // Also do this with the overlays? Those are final, though.
+                case "head", "rightarm", "body", "leftarm", "leftleg", "rightleg" -> parent = "root";
+            }
+
+            stringToPart.put(adjustFormatting(name), new PartInfo(adjustFormatting(parent), part, children));
         }
 
-        Map<String, PartInfo> stringToPart = new HashMap<>();
-        try {
-            for (JsonObject bone : bones) {
-                // Iterate through all bones
-                String name = bone.get("name").getAsString();
-
-                JsonElement jsonParent = bone.get("parent");
-                JsonObject parentPart = null;
-                String parent = null;
-                if (jsonParent != null) {
-                    // Search through all bones to find the parent part
-                    parent = jsonParent.getAsString();
-                    for (JsonObject otherBone : bones) {
-                        if (parent.equals(otherBone.get("name").getAsString())) {
-                            parentPart = otherBone;
-                            break;
-                        }
-                    }
-                }
-
-                List<ModelPart.Cube> cuboids = new ArrayList<>();
-                JsonArray pivot = bone.getAsJsonArray("pivot");
-                float pivotX = pivot.get(0).getAsFloat();
-                float pivotY = pivot.get(1).getAsFloat();
-                float pivotZ = pivot.get(2).getAsFloat();
-
-                JsonArray cubes = bone.getAsJsonArray("cubes");
-                if (cubes != null) {
-                    for (JsonElement node : cubes) {
-                        JsonObject cube = node.getAsJsonObject();
-                        JsonElement mirrorNode = cube.get("mirror"); // Can be null on the llama skins in the Wandering Trader pack
-                        boolean mirrored = mirrorNode != null && mirrorNode.getAsBoolean();
-                        JsonArray origin = cube.getAsJsonArray("origin");
-                        float originX = origin.get(0).getAsFloat();
-                        float originY = origin.get(1).getAsFloat();
-                        float originZ = origin.get(2).getAsFloat();
-                        JsonArray size = cube.getAsJsonArray("size");
-                        float sizeX = size.get(0).getAsFloat();
-                        float sizeY = size.get(1).getAsFloat();
-                        float sizeZ = size.get(2).getAsFloat();
-                        JsonArray uv = cube.getAsJsonArray("uv");
-                        JsonElement inflateNode = cube.get("inflate"); // Again, the llama skin
-                        float inflate = inflateNode != null ? inflateNode.getAsFloat() : 0f;
-                        // I didn't use the below, but it may be a helpful reference in the future
-                        // The Y needs to be inverted, for whatever reason
-                        // https://github.com/JannisX11/blockbench/blob/8529c0adee8565f8dac4b4583c3473b60679966d/js/transform.js#L148
-                        cuboids.add(new ModelPart.Cube((int) uv.get(0).getAsFloat(), (int) uv.get(1).getAsFloat(),
-                                (originX - pivotX), (-(originY + sizeY) + pivotY), (originZ - pivotZ),
-                                sizeX, sizeY, sizeZ, inflate, inflate, inflate, mirrored, uvHeight, uvWidth, ALL_VISIBLE));
-                    }
-                }
-
-                Map<String, ModelPart> children = new HashMap<>();
-                ModelPart part = new ModelPart(cuboids, children);
-                if (parentPart != null) {
-                    // This appears to be a difference between Bedrock and Java - pivots are carried over for us
-                    JsonArray parentPivot = parentPart.getAsJsonArray("pivot");
-                    part.setPos(pivotX - parentPivot.get(0).getAsFloat(),
-                            pivotY - parentPivot.get(1).getAsFloat(),
-                            pivotZ - parentPivot.get(2).getAsFloat());
-                } else {
-                    part.setPos(pivotX, pivotY, pivotZ);
-                }
-
-                switch (name) { // Also do this with the overlays? Those are final, though.
-                    case "head", "hat", "rightArm", "body", "leftArm", "leftLeg", "rightLeg" -> parent = "root";
-                }
-
-                name = adjustFormatting(name);
-
-                stringToPart.put(name, new PartInfo(adjustFormatting(parent), part, children));
-            }
-
-            for (Map.Entry<String, PartInfo> entry : stringToPart.entrySet()) {
-                if (entry.getValue().parent != null) {
-                    PartInfo parentPart = stringToPart.get(entry.getValue().parent);
-                    if (parentPart != null) {
-                        parentPart.children.put(entry.getKey(), entry.getValue().part);
-                    }
-                }
-            }
-
-            PartInfo root = stringToPart.get("root");
-
-            ensureAvailable(root.children, "ear");
-            root.children.computeIfAbsent("cloak", (string) -> // Required to allow a cape to render
-                            HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F).getRoot().addOrReplaceChild(string,
-                                    CubeListBuilder.create()
-                                            .texOffs(0, 0)
-                                            .addBox(-5.0F, 0.0F, -1.0F, 10.0F, 16.0F, 1.0F, CubeDeformation.NONE, 1.0F, 0.5F),
-                                    PartPose.offset(0.0F, 0.0F, 0.0F)).bake(64, 64));
-            ensureAvailable(root.children, "left_sleeve");
-            ensureAvailable(root.children, "right_sleeve");
-            ensureAvailable(root.children, "left_pants");
-            ensureAvailable(root.children, "right_pants");
-            ensureAvailable(root.children, "jacket");
-
-            // Create base model
-            return new BedrockPlayerEntityModel<>(root.part);
-        } catch (Exception e) {
-            LOGGER.error("Error while parsing geometry into model!", e);
-            return null;
+        PartInfo root = stringToPart.get("root");
+        if (root == null) {
+            final Map<String, ModelPart> rootParts = Maps.newHashMap();
+            stringToPart.put("root", root = new PartInfo("", new ModelPart(List.of(), rootParts), rootParts));
         }
+
+        for (Map.Entry<String, PartInfo> entry : stringToPart.entrySet()) {
+            if (entry.getValue().parent.isBlank() && entry.getValue().part() != root.part) {
+                root.children.put(entry.getKey(), entry.getValue().part());
+                continue;
+            }
+
+            PartInfo parentPart = stringToPart.get(entry.getValue().parent);
+            if (parentPart != null) {
+                parentPart.children.put(entry.getKey(), entry.getValue().part);
+            }
+        }
+
+        return new BedrockPlayerEntityModel<>(root.part());
     }
 
     private static String adjustFormatting(String name) {
@@ -166,22 +108,77 @@ public class GeometryUtil {
             return null;
         }
 
-        return switch (name) {
-            case "leftArm" -> "left_arm";
-            case "rightArm" -> "right_arm";
-            case "leftLeg" -> "left_leg";
-            case "rightLeg" -> "right_leg";
-            default -> name;
+        return switch (name.toLowerCase(Locale.ROOT)) {
+            case "leftarm" -> "left_arm";
+            case "rightarm" -> "right_arm";
+            case "leftleg" -> "left_leg";
+            case "rightleg" -> "right_leg";
+            case "leftpants" -> "left_pants";
+            case "rightpants" -> "right_pants";
+            default -> name.toLowerCase(Locale.ROOT);
         };
     }
 
-    /**
-     * Ensure a part is created, or else the geometry will not load in 1.17.
-     */
-    private static void ensureAvailable(Map<String, ModelPart> children, String name) {
-        children.computeIfAbsent(name, (string) -> new ModelPart(Collections.emptyList(), Maps.newHashMap()));
+    private record PartInfo(String parent, ModelPart part, Map<String, ModelPart> children) {
     }
 
-    private record PartInfo(String parent, ModelPart part, Map<String, ModelPart> children) {
+    private static void applyUVMap(final ModelPart.Cube cuboid, final Set<Direction> set, final UVMap map, final float uvWidth, final float uvHeight, final float inflate, final boolean mirror) {
+        float x = cuboid.minX, y = cuboid.minY, z = cuboid.minZ;
+        float f = cuboid.maxX, g = cuboid.maxY, h = cuboid.maxZ;
+
+        x -= inflate;
+        y -= inflate;
+        z -= inflate;
+        f += inflate;
+        g += inflate;
+        h += inflate;
+
+        if (mirror) {
+            float i = f;
+            f = x;
+            x = i;
+        }
+
+        ModelPart.Vertex vertex = new ModelPart.Vertex(x, y, z, 0.0F, 0.0F);
+        ModelPart.Vertex vertex2 = new ModelPart.Vertex(f, y, z, 0.0F, 8.0F);
+        ModelPart.Vertex vertex3 = new ModelPart.Vertex(f, g, z, 8.0F, 8.0F);
+        ModelPart.Vertex vertex4 = new ModelPart.Vertex(x, g, z, 8.0F, 0.0F);
+        ModelPart.Vertex vertex5 = new ModelPart.Vertex(x, y, h, 0.0F, 0.0F);
+        ModelPart.Vertex vertex6 = new ModelPart.Vertex(f, y, h, 0.0F, 8.0F);
+        ModelPart.Vertex vertex7 = new ModelPart.Vertex(f, g, h, 8.0F, 8.0F);
+        ModelPart.Vertex vertex8 = new ModelPart.Vertex(x, g, h, 8.0F, 0.0F);
+
+        final ModelPart.Polygon[] sides = cuboid.polygons;
+        int s = 0;
+
+        if (set.contains(Direction.DOWN)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.DOWN);
+            sides[s++] = new ModelPart.Polygon(new ModelPart.Vertex[]{vertex6, vertex5, vertex, vertex2}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.DOWN);
+        }
+
+        if (set.contains(Direction.UP)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.UP);
+            sides[s++] = new ModelPart.Polygon(new ModelPart.Vertex[]{vertex3, vertex4, vertex8, vertex7}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.UP);
+        }
+
+        if (set.contains(Direction.WEST)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.WEST);
+            sides[s++] = new ModelPart.Polygon(new ModelPart.Vertex[]{vertex, vertex5, vertex8, vertex4}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.WEST);
+        }
+
+        if (set.contains(Direction.NORTH)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.NORTH);
+            sides[s++] = new ModelPart.Polygon(new ModelPart.Vertex[]{vertex2, vertex, vertex4, vertex3}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.NORTH);
+        }
+
+        if (set.contains(Direction.EAST)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.EAST);
+            sides[s++] = new ModelPart.Polygon(new ModelPart.Vertex[]{vertex6, vertex2, vertex3, vertex7}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.EAST);
+        }
+
+        if (set.contains(Direction.SOUTH)) {
+            final Float[] uv = map.getMap().get(org.cube.converter.util.element.Direction.SOUTH);
+            sides[s] = new ModelPart.Polygon(new ModelPart.Vertex[]{vertex5, vertex6, vertex7, vertex8}, uv[0], uv[1], uv[2], uv[3], uvWidth, uvHeight, mirror, Direction.SOUTH);
+        }
     }
 }

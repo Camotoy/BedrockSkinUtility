@@ -8,6 +8,7 @@
     "CapeFeatureRendererMixin",
     "ClientPlayNetworkHandlerMixin",
     "EntityRendererDispatcherMixin",
+    "ModelPartMixin",
     "PlayerEntityRendererChangeModel",
     "PlayerInfoMixin",
     "PlayerSkinFieldAccessor",

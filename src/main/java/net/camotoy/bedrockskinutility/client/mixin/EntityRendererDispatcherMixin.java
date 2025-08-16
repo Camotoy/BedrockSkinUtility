@@ -14,18 +14,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityRenderDispatcher.class)
 public abstract class EntityRendererDispatcherMixin {
 
+    @SuppressWarnings("unchecked")
     @Inject(
             method = "getRenderer",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/player/AbstractClientPlayer;getSkin()Lnet/minecraft/client/resources/PlayerSkin;"),
             cancellable = true
     )
-    public void getRenderer(Entity entity, CallbackInfoReturnable<EntityRenderer<?>> cir) {
+    public <T extends Entity> void getRenderer(Entity entity, CallbackInfoReturnable<EntityRenderer<? super T, ?>> cir) {
         PlayerInfo playerListEntry = ((BedrockAbstractClientPlayerEntity) entity).bedrockskinutility$getPlayerListEntry();
         if (playerListEntry != null) {
             PlayerRenderer renderer = ((BedrockPlayerInfo) playerListEntry).bedrockskinutility$getModel();
             if (renderer != null) {
-                cir.setReturnValue(renderer);
+                cir.setReturnValue((EntityRenderer<? super T, ?>) renderer);
             }
         }
     }
